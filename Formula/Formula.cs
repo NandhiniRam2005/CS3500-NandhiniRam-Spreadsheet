@@ -2,5 +2,11 @@
 
 public class Formula
 {
+    ///<summary>
+    /// FIXME:
+    ///</summary>
+    ///<param name="formula"> FIXME: </param>
+
+    public Formula(string formula)
 
 }
