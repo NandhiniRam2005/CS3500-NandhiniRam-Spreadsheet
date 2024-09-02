@@ -6,6 +6,7 @@
 
 namespace CS3500.Formula;
 
+using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -46,7 +47,7 @@ public class Formula
     /// <summary>
     ///   This list represents the tokens from the given formula.
     /// </summary>
-    private List<string> tokensInFormula;
+    private List<string> validatedTokens;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Formula"/> class.
@@ -78,14 +79,58 @@ public class Formula
     public Formula(string formula)
     {
         double validatedNumericalValue;
-        int balancedParenthesisCounter;
-        bool nextTokenOperand;
-        List<string> validatedTokens = new();
+        int parenthesisCounter = 0;
+        bool isNextTokenOperand = true;
 
-        //gotta iterate through tokens ... use gettokens method... 
-        //if token is an operand, check if a variable is the next token (if so normalize it)
-        //add this to the validated tokens list and set the operand indicator to false
-        //throw exception when needed (if variable is not a valid variable)
+        // Enumerate tokens in the formula
+        List<string> tokensInFormula = GetTokens(formula);
+
+        foreach (string token in tokensInFormula)
+        {
+
+            //    If token is a variable (call IsVar with token):
+            //        If isNextTokenOperand is true:
+            //            Convert token to uppercase
+            //            Add token to validatedTokens
+            //            Set isNextTokenOperand to false
+            //        Else:
+            //            Throw FormulaFormatException with message "blabla"
+
+            //    Else If token is a number (parse token to validatedNumericalValue):
+            //        If isNextTokenOperand is true:
+            //            Convert validatedNumericalValue to string
+            //            Add string to validatedTokens
+            //            Set isNextTokenOperand to false
+            //        Else:
+            //            Throw FormulaFormatException with message "babala."
+
+            //    Else If token is "(":
+            //        Increment parenthesisCounter by 1
+            //        Add token to validatedTokens
+            //        Set isNextTokenOperand to true
+
+            //    Else If token is ")":
+            //        Decrement parenthesisCounter by 1
+            //        If parenthesisCounter is less than 0:
+            //            Throw FormulaFormatException with message "bla blas"
+            //        Add token to validatedTokens
+            //        Set isNextTokenOperand to false
+
+            //    Else If token is an operator ("+" or "-" or "*" or "/"):
+            //        If isNextTokenOperand is false:
+            //            Add token to validatedTokens
+            //            Set isNextTokenOperand to true
+            //        Else:
+            //            Throw FormulaFormatException with message "blabla"
+            //
+            //    Else:
+            //            Throw FormulaFormatException with message "blabla"
+
+            //If parenthesisCounter is not 0:
+            //    Throw FormulaFormatException with message "blabla"
+
+            // A LOT OF NESTED IFS - WRITE HELPER METHOD/make it look better
+        }
     }
 
     /// <summary>
@@ -107,8 +152,17 @@ public class Formula
     /// <returns> the set of variables (string names) representing the variables referenced by the formula. </returns>
     public ISet<string> GetVariables()
     {
-        // FIXME: implement your code here
-        return new HashSet<string>();
+        HashSet<string> variables = new ();
+
+        foreach (string token in validatedTokens)
+        {
+            if (IsVar(token))
+            {
+                variables.Add(token.ToUpper());
+            }
+        }
+
+        return variables;
     }
 
     /// <summary>
