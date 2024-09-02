@@ -6,7 +6,6 @@
 
 namespace CS3500.Formula;
 
-using System.Reflection.Metadata;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -81,55 +80,89 @@ public class Formula
         double validatedNumericalValue;
         int parenthesisCounter = 0;
         bool isNextTokenOperand = true;
+        bool hasTokenInsideParentheses = false;
+        List<string> validatedTokens = new ();
+
+        if (string.IsNullOrWhiteSpace(formula))
+        {
+            throw new FormulaFormatException("Formula cannot be empty or contain only whitespace.");
+        }
 
         // Enumerate tokens in the formula
         List<string> tokensInFormula = GetTokens(formula);
 
         foreach (string token in tokensInFormula)
         {
+            if (IsVar(token))
+            {
+                if (isNextTokenOperand)
+                {
+                    validatedTokens.Add(token.ToUpper());
+                    isNextTokenOperand = false;
+                    hasTokenInsideParentheses = true;
+                }
+                else
+                {
+                    throw new FormulaFormatException("Unexpected variable where an operand is not expected.");
+                }
+            }
+            else if (double.TryParse(token, out validatedNumericalValue))
+            {
+                if (isNextTokenOperand)
+                {
+                    validatedTokens.Add(validatedNumericalValue.ToString());
+                    isNextTokenOperand = false;
+                    hasTokenInsideParentheses = true;
+                }
+                else
+                {
+                    throw new FormulaFormatException("Unexpected number where an operand is not expected.");
+                }
+            }
+            else if (token == "(")
+            {
+                parenthesisCounter++;
+                isNextTokenOperand = true;
+                validatedTokens.Add(token);
+                hasTokenInsideParentheses = false;
+            }
+            else if (token == ")")
+            {
+                parenthesisCounter--;
+                if (parenthesisCounter < 0)
+                {
+                    throw new FormulaFormatException("Mismatched parentheses");
+                }
 
-            //    If token is a variable (call IsVar with token):
-            //        If isNextTokenOperand is true:
-            //            Convert token to uppercase
-            //            Add token to validatedTokens
-            //            Set isNextTokenOperand to false
-            //        Else:
-            //            Throw FormulaFormatException with message "blabla"
+                if (!hasTokenInsideParentheses)
+                {
+                    throw new FormulaFormatException("Empty parentheses are not allowed.");
+                }
 
-            //    Else If token is a number (parse token to validatedNumericalValue):
-            //        If isNextTokenOperand is true:
-            //            Convert validatedNumericalValue to string
-            //            Add string to validatedTokens
-            //            Set isNextTokenOperand to false
-            //        Else:
-            //            Throw FormulaFormatException with message "babala."
+                validatedTokens.Add(token);
+                isNextTokenOperand = false;
+            }
+            else if (token == "+" || token == "-" || token == "*" || token == "/")
+            {
+                if (!isNextTokenOperand)
+                {
+                    validatedTokens.Add(token);
+                    isNextTokenOperand = true;
+                }
+                else
+                {
+                    throw new FormulaFormatException("Unexpected operator where an operand is expected.");
+                }
+            }
+            else
+            {
+                throw new FormulaFormatException("Invalid token in formula.");
+            }
+        }
 
-            //    Else If token is "(":
-            //        Increment parenthesisCounter by 1
-            //        Add token to validatedTokens
-            //        Set isNextTokenOperand to true
-
-            //    Else If token is ")":
-            //        Decrement parenthesisCounter by 1
-            //        If parenthesisCounter is less than 0:
-            //            Throw FormulaFormatException with message "bla blas"
-            //        Add token to validatedTokens
-            //        Set isNextTokenOperand to false
-
-            //    Else If token is an operator ("+" or "-" or "*" or "/"):
-            //        If isNextTokenOperand is false:
-            //            Add token to validatedTokens
-            //            Set isNextTokenOperand to true
-            //        Else:
-            //            Throw FormulaFormatException with message "blabla"
-            //
-            //    Else:
-            //            Throw FormulaFormatException with message "blabla"
-
-            //If parenthesisCounter is not 0:
-            //    Throw FormulaFormatException with message "blabla"
-
-            // A LOT OF NESTED IFS - WRITE HELPER METHOD/make it look better
+        if (parenthesisCounter != 0)
+        {
+            throw new FormulaFormatException("Mismatched parentheses.");
         }
     }
 
@@ -152,8 +185,10 @@ public class Formula
     /// <returns> the set of variables (string names) representing the variables referenced by the formula. </returns>
     public ISet<string> GetVariables()
     {
+        // Create a HashSet to hold unique variables
         HashSet<string> variables = new ();
 
+        // Iterate through tokens and add variables to the set
         foreach (string token in validatedTokens)
         {
             if (IsVar(token))
