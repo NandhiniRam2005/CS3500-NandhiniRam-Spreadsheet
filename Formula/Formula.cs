@@ -49,6 +49,11 @@ public class Formula
     private List<string> validatedTokens;
 
     /// <summary>
+    ///  This is a string representation of a canonical form of the formula.
+    /// </summary>
+    private string canonicalFormula;
+
+    /// <summary>
     ///   Initializes a new instance of the <see cref="Formula"/> class.
     ///   <para>
     ///     Creates a Formula from a string that consists of an infix expression written as
@@ -81,7 +86,8 @@ public class Formula
         int parenthesisCounter = 0;
         bool isNextTokenOperand = true;
         bool hasTokenInsideParentheses = false;
-        List<string> validatedTokens = new ();
+        this.validatedTokens = new ();
+        this.canonicalFormula = string.Empty;
 
         if (string.IsNullOrWhiteSpace(formula))
         {
@@ -97,7 +103,7 @@ public class Formula
             {
                 if (isNextTokenOperand)
                 {
-                    validatedTokens.Add(token.ToUpper());
+                    this.validatedTokens.Add(token.ToUpper());
                     isNextTokenOperand = false;
                     hasTokenInsideParentheses = true;
                 }
@@ -110,7 +116,7 @@ public class Formula
             {
                 if (isNextTokenOperand)
                 {
-                    validatedTokens.Add(validatedNumericalValue.ToString());
+                    this.validatedTokens.Add(validatedNumericalValue.ToString());
                     isNextTokenOperand = false;
                     hasTokenInsideParentheses = true;
                 }
@@ -123,7 +129,7 @@ public class Formula
             {
                 parenthesisCounter++;
                 isNextTokenOperand = true;
-                validatedTokens.Add(token);
+                this.validatedTokens.Add(token);
                 hasTokenInsideParentheses = false;
             }
             else if (token == ")")
@@ -139,14 +145,14 @@ public class Formula
                     throw new FormulaFormatException("Empty parentheses are not allowed.");
                 }
 
-                validatedTokens.Add(token);
+                this.validatedTokens.Add(token);
                 isNextTokenOperand = false;
             }
             else if (token == "+" || token == "-" || token == "*" || token == "/")
             {
                 if (!isNextTokenOperand)
                 {
-                    validatedTokens.Add(token);
+                    this.validatedTokens.Add(token);
                     isNextTokenOperand = true;
                 }
                 else
@@ -164,6 +170,9 @@ public class Formula
         {
             throw new FormulaFormatException("Mismatched parentheses.");
         }
+
+        // Join the strings in the validatedTokens list without any spaces and store it in the canonicalFormula string varaible
+        this.canonicalFormula = string.Join(string.Empty, this.validatedTokens);
     }
 
     /// <summary>
@@ -189,7 +198,7 @@ public class Formula
         HashSet<string> variables = new ();
 
         // Iterate through tokens and add variables to the set
-        foreach (string token in validatedTokens)
+        foreach (string token in this.validatedTokens)
         {
             if (IsVar(token))
             {
@@ -200,6 +209,10 @@ public class Formula
         return variables;
     }
 
+    /// <returns>
+    ///  A canonical version (string) of the formula. All "equal" formulas
+    ///   should have the same value here.
+    /// </returns>
     /// <summary>
     ///   <para>
     ///     Returns a string representation of a canonical form of the formula.
@@ -226,14 +239,9 @@ public class Formula
     ///     This code should execute in O(1) time.
     ///   <para>
     /// </summary>
-    /// <returns>
-    ///   A canonical version (string) of the formula. All "equal" formulas
-    ///   should have the same value here.
-    /// </returns>
     public override string ToString()
     {
-        // FIXME: add your code here.
-        return string.Empty;
+        return this.canonicalFormula;
     }
 
     /// <summary>
