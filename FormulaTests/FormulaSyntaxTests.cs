@@ -340,6 +340,28 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
+    ///     This test makes sure that a decimal beginning with a decimal point is still valid.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void FormulaConstructor_DecimalPointFollowedByNumber_Valid()
+    {
+        _ = new Formula(".9");
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure that a number followed by a decimal point is still valid.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void FormulaConstructor_NumbertFollowedByDecimalPoint_Valid()
+    {
+        _ = new Formula("7.");
+    }
+
+    /// <summary>
+    ///   <para>
     ///     This test makes sure that a formula with a variable is valid.
     ///   </para>
     /// </summary>
@@ -658,7 +680,87 @@ public class FormulaSyntaxTests
 
     // --- Tests for toString Method ---
 
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing a single variable gets normalized and returned in the toString method.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_SingleVariableToken_AreEqual()
+    {
+        Formula formula = new Formula("x568");
+        Assert.AreEqual("X568", formula.ToString());
+    }
 
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing variables with operation signs returns the expected string.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_SimpleFormulaWithVariables_AreEqual()
+    {
+        Formula formula = new Formula("x234+y78");
+        Assert.AreEqual("X234+Y78", formula.ToString());
+    }
 
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing integers returns the expected string
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_NumbersInFormula_AreEqual()
+    {
+        Formula formula = new Formula("6/8+0");
+        Assert.AreEqual("6/8+0", formula.ToString());
+    }
 
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing parenthesis still returns the expected string.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_ParenthesisAroundTokens_AreEqual()
+    {
+        Formula formula = new Formula("(P56789)+((8)+(y6))");
+        Assert.AreEqual("(P56789)+((8)+(Y6))", formula.ToString());
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a scientific notation value returns the expected string.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_ScientificNotationNumber_AreEqual()
+    {
+        Formula formula = new Formula("10e-67");
+        Assert.AreEqual("1E-66", formula.ToString());
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a decimal with many leading zeroes is changed to standard form by double.tryParse 
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_DecimalWithManyZeroes_AreEqual()
+    {
+        Formula formula = new Formula("1.00000000");
+        Assert.AreEqual("1", formula.ToString());
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula with many spaces still returns a valid string without the spaces. 
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void ToString_SpacesInValidFormula_AreEqual()
+    {
+        Formula formula = new Formula(" 6.7   + 8");
+        Assert.AreEqual("6.7+8", formula.ToString());
+    }
 }
