@@ -1,8 +1,26 @@
 ﻿// <copyright file="Formula.cs" company="UofU-CS3500">
 // Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
-// <authors> Nandhini Ramanathan, Professor Joe, Danny, and Jim </authors>
-// <date> August 25,2023 </date>
+
+/// <summary>
+/// Author:    Nandhini Ramanathan, Professor Joe, Danny, and Jim
+/// Partner:   None
+/// Date:      September 6,2024
+/// Course:    CS 3500, University of Utah, School of Computing
+/// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
+///            be copied for use in Academic Coursework.
+///
+/// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
+/// did not copy it in part or whole from another source.  All
+/// references used in the completion of the assignments are cited
+/// in my README file.
+///
+/// File Contents
+///    This file defines the Formula class, which represents mathematical formulas
+///    in standard infix notation. The class is responsible for validating formulas,
+///    extracting variables, and converting the formula into a canonical string form
+///    with different public and private helper methods.
+/// </summary>
 
 namespace CS3500.Formula;
 
@@ -20,20 +38,6 @@ using System.Text.RegularExpressions;
 ///     a single variable, "x y" consists of two variables "x" and y; "x23" is a single variable;
 ///     and "x 23" consists of a variable "x" and a number "23".  Otherwise, spaces are to be removed.
 ///   </para>
-///   <para>
-///     For Assignment Two, you are to implement the following functionality:
-///   </para>
-///   <list type="bullet">
-///     <item>
-///        Formula Constructor which checks the syntax of a formula.
-///     </item>
-///     <item>
-///        Get Variables
-///     </item>
-///     <item>
-///        ToString
-///     </item>
-///   </list>
 /// </summary>
 public class Formula
 {
@@ -44,45 +48,28 @@ public class Formula
     private const string VariableRegExPattern = @"[a-zA-Z]+\d+";
 
     /// <summary>
-    ///   This list represents the tokens from the given formula.
+    ///   This list represents the tokens from the given formula that are checked and validated in the constructor.
     /// </summary>
-    private List<string> validatedTokens;
+    private readonly List<string> validatedTokens;
 
     /// <summary>
-    ///  This is a string representation of a canonical form of the formula.
+    ///  This is a string representation of a valid canonical form of the formula.
     /// </summary>
-    private string canonicalFormula;
+    private readonly string canonicalFormula;
 
     /// <summary>
     ///   Initializes a new instance of the <see cref="Formula"/> class.
     ///   <para>
     ///     Creates a Formula from a string that consists of an infix expression written as
     ///     described in the class comment.  If the expression is syntactically incorrect,
-    ///     throws a FormulaFormatException with an explanatory Message.  See the assignment
-    ///     specifications for the syntax rules you are to implement.
+    ///     throws a FormulaFormatException with an explanatory Message. Some syntactical errors
+    ///     include invalid variable names, empty formula, mismatched parenthesis, and the
+    ///     invalid following rule.
     ///   </para>
-    ///   <para>
-    ///     Non Exhaustive Example Errors:
-    ///   </para>
-    ///   <list type="bullet">
-    ///     <item>
-    ///        Invalid variable name, e.g., x, x1x  (Note: x1 is valid, but would be normalized to X1)
-    ///     </item>
-    ///     <item>
-    ///        Empty formula, e.g., string.Empty
-    ///     </item>
-    ///     <item>
-    ///        Mismatched Parentheses, e.g., "(("
-    ///     </item>
-    ///     <item>
-    ///        Invalid Following Rule, e.g., "2x+5"
-    ///     </item>
-    ///   </list>
     /// </summary>
     /// <param name="formula"> The string representation of the formula to be created.</param>
     public Formula(string formula)
     {
-        double validatedNumericalValue;
         int parenthesisCounter = 0;
         bool isNextTokenOperand = true;
         bool hasTokenInsideParentheses = false;
@@ -112,7 +99,7 @@ public class Formula
                     throw new FormulaFormatException("Unexpected variable where an operand is not expected.");
                 }
             }
-            else if (double.TryParse(token, out validatedNumericalValue))
+            else if (double.TryParse(token, out double validatedNumericalValue))
             {
                 if (isNextTokenOperand)
                 {
@@ -171,31 +158,20 @@ public class Formula
             throw new FormulaFormatException("Mismatched parentheses.");
         }
 
-        // Join the strings in the validatedTokens list without any spaces and store it in the canonicalFormula string varaible
+        // Join the strings in the validatedTokens list without any spaces and store it in the canonicalFormula string variable
         this.canonicalFormula = string.Join(string.Empty, this.validatedTokens);
     }
 
     /// <summary>
     ///   <para>
-    ///     Returns a set of all the variables in the formula.
+    ///     Returns a set of all the variables in the formula with no duplicates and variables are normalized to uppercase.
     ///   </para>
-    ///   <remarks>
-    ///     Important: no variable may appear more than once in the returned set, even
-    ///     if it is used more than once in the Formula.
-    ///   </remarks>
-    ///   <para>
-    ///     For example, if N is a method that converts all the letters in a string to upper case:
-    ///   </para>
-    ///   <list type="bullet">
-    ///     <item>new("x1+y1*z1").GetVariables() should enumerate "X1", "Y1", and "Z1".</item>
-    ///     <item>new("x1+X1"   ).GetVariables() should enumerate "X1".</item>
-    ///   </list>
     /// </summary>
     /// <returns> the set of variables (string names) representing the variables referenced by the formula. </returns>
     public ISet<string> GetVariables()
     {
         // Create a HashSet to hold unique variables
-        HashSet<string> variables = new ();
+        HashSet<string> variables = new();
 
         // Iterate through tokens and add variables to the set
         foreach (string token in this.validatedTokens)
@@ -209,36 +185,16 @@ public class Formula
         return variables;
     }
 
+    /// <summary>
+    ///   <para>
+    ///     Returns a string representation of a canonical form of the formula that contains no spaces.
+    ///     All the variables in the string are also normalized (capital letters). This code executes in O(1) time.
+    ///   </para>
+    /// </summary>
     /// <returns>
     ///   A canonical version (string) of the formula. All "equal" formulas
     ///   should have the same value here.
     /// </returns>
-    /// <summary>
-    ///   <para>
-    ///     Returns a string representation of a canonical form of the formula.
-    ///   </para>
-    ///   <para>
-    ///     The string will contain no spaces.
-    ///   </para>
-    ///   <para>
-    ///     If the string is passed to the Formula constructor, the new Formula f
-    ///     will be such that this.ToString() == f.ToString().
-    ///   </para>
-    ///   <para>
-    ///     All of the variables in the string will be normalized.  This
-    ///     means capital letters.
-    ///   </para>
-    ///   <para>
-    ///       For example:
-    ///   </para>
-    ///   <code>
-    ///       new("x1 + y1").ToString() should return "X1+Y1"
-    ///       new("X1 + 5.0000").ToString() should return "X1+5".
-    ///   </code>
-    ///   <para>
-    ///     This code should execute in O(1) time.
-    ///   <para>
-    /// </summary>
     public override string ToString()
     {
         return this.canonicalFormula;
@@ -322,7 +278,7 @@ public class FormulaFormatException : Exception
     ///      Constructs a FormulaFormatException containing the explanatory message.
     ///   </para>
     /// </summary>
-    /// <param name="message"> A developer defined message describing why the exception occured.</param>
+    /// <param name="message"> A developer defined message describing why the exception occurred.</param>
     public FormulaFormatException(string message)
         : base(message)
     {

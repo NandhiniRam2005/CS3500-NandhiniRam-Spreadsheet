@@ -1,16 +1,27 @@
-- Author:	  Nandhini Ramanathan
-- Date:		  August 27,2024
-- Assignment: Assignment 1 - Test Driven Development
+```
+Author:     Nandhini Ramanathan
+Partner:    None
+Start Date: 24-Aug-2024
+Course:     CS 3505, University of Utah, School of Computing
+GitHub ID:  NandhiniRam2005
+Repo:       https://github.com/uofu-cs3500-20-fall2024/spreadsheet-NandhiniRam2005
+Commit Date: 6-Sep-2024 4:30pm
+Project:    FormulaSyntaxTests
+Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for use in Academic Coursework.
+```
 
-This template is the starting place for the first
-lab and the first assignment.  The Formula Tests project should
-contain:
+# Comments to Evaluators:
 
-1) Formula.dll
-1) FormulaSyntaxTests.cs
-1) stylecop.json
+None, my work stands on its own.
 
-The solution folder should contain this README as well as the .editorconfig file.
+# Assignment Specific Topics
+This assignment project is a MS unit tester class for the Formula class.
 
-When you have completed your work for the assignment, update this
-README to contain the appropriate information.
+# Consulted Peers:
+
+Joel Rodriguez
+
+# References:
+
+    1. C# | Check if HashSet and the specified collection contain the same elements - https://www.geeksforgeeks.org/c-sharp-check-if-hashset-and-the-specified-collection-contain-the-same-elements/
+
