@@ -210,7 +210,7 @@ public class Formula
     }
 
     /// <returns>
-    ///  A canonical version (string) of the formula. All "equal" formulas
+    ///   A canonical version (string) of the formula. All "equal" formulas
     ///   should have the same value here.
     /// </returns>
     /// <summary>
@@ -221,7 +221,7 @@ public class Formula
     ///     The string will contain no spaces.
     ///   </para>
     ///   <para>
-    ///     If the string is passed to the Formula constructor, the new Formula f 
+    ///     If the string is passed to the Formula constructor, the new Formula f
     ///     will be such that this.ToString() == f.ToString().
     ///   </para>
     ///   <para>
@@ -280,7 +280,7 @@ public class Formula
     /// <returns> The ordered list of tokens in the formula. </returns>
     private static List<string> GetTokens(string formula)
     {
-        List<string> results = [];
+        List<string> results = new ();
 
         string lpPattern = @"\(";
         string rpPattern = @"\)";

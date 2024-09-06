@@ -268,6 +268,30 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
+    ///     This test makes sure just a letter followed by a scientific notation number is invalid.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(FormulaFormatException))]
+    public void FormulaConstructor_TestVariableFollowedByScientificaNotationNumber_Invalid()
+    {
+        _ = new Formula("C4e9");
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure just a letter followed by a decimal number is invalid.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(FormulaFormatException))]
+    public void FormulaConstructor_TestVariableFollowedByDecimalNumber_Invalid()
+    {
+        _ = new Formula("C0.09");
+    }
+
+    /// <summary>
+    ///   <para>
     ///     This test makes sure a number followed by a letter is invalid.
     ///   </para>
     /// </summary>
@@ -551,4 +575,90 @@ public class FormulaSyntaxTests
     {
         _ = new Formula("1a4");
     }
+
+    // --- Tests for getVariables Method ---
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing a single variable gets normalized and returned in the getVariables method.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void GetVariables_SingleVariableToken_IsTrueContains()
+    {
+        Formula formula = new Formula("x1");
+        HashSet<string> variables = new HashSet<string>(formula.GetVariables());
+        Assert.IsTrue(variables.Contains("X1"));
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing variables with operation signs returns the expected variables only.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void GetVariables_VariablesWithOperatorInbetween_SetEqualsTrue()
+    {
+        Formula formula = new Formula("x234 + y78");
+        HashSet<string> variables = new HashSet<string>(formula.GetVariables());
+        Assert.IsTrue(variables.SetEquals(new[] { "X234", "Y78" }));
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing no variables returns an empty set
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void GetVariables_NoVariableToken_EmptySet()
+    {
+        Formula formula = new Formula("6/8+0");
+        HashSet<string> variables = new HashSet<string>(formula.GetVariables());
+        Assert.AreEqual(0, variables.Count);
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a formula containing parenthesis around variables still returns the expected variable set.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void GetVariables_ParenthesisAroundVariables_SetEqualsTrue()
+    {
+        Formula formula = new Formula("(P56789)+((8)+(y6))");
+        HashSet<string> variables = new HashSet<string>(formula.GetVariables());
+        Assert.IsTrue(variables.SetEquals(new[] { "Y6", "P56789" }));
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a scientific notation value is not a variable.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void GetVariables_ScientificNotationNumber_EmptySet()
+    {
+        Formula formula = new Formula("10e-67");
+        HashSet<string> variables = new HashSet<string>(formula.GetVariables());
+        Assert.AreEqual(0, variables.Count);
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     This test makes sure a that a duplicate variable is only counted once.
+    ///   </para>
+    /// </summary>
+    [TestMethod]
+    public void GetVariables_DuplicateVariables_OnlyAppearOnceInSet()
+    {
+        Formula formula = new Formula("e45 * e45 + y78");
+        HashSet<string> variables = new HashSet<string>(formula.GetVariables());
+        Assert.IsTrue(variables.SetEquals(new[] { "E45", "Y78" }));
+    }
+
+    // --- Tests for toString Method ---
+
+
+
+
 }
