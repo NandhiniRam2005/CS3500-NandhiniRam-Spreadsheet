@@ -70,92 +70,46 @@ public class Formula
     /// <param name="formula"> The string representation of the formula to be created.</param>
     public Formula(string formula)
     {
+        this.validatedTokens = new ();
+        this.canonicalFormula = string.Empty;
+
         int parenthesisCounter = 0;
         bool isNextTokenOperand = true;
         bool hasTokenInsideParentheses = false;
-        this.validatedTokens = new ();
-        this.canonicalFormula = string.Empty;
 
         if (string.IsNullOrWhiteSpace(formula))
         {
             throw new FormulaFormatException("Formula cannot be empty or contain only whitespace.");
         }
 
-        // Enumerate tokens in the formula
+        // Enumerates formula's tokens
         List<string> tokensInFormula = GetTokens(formula);
 
         foreach (string token in tokensInFormula)
         {
-            if (IsVar(token))
+            if (IsVar(token) || double.TryParse(token, out double validatedNumericalValue))
             {
-                if (isNextTokenOperand)
-                {
-                    this.validatedTokens.Add(token.ToUpper());
-                    isNextTokenOperand = false;
-                    hasTokenInsideParentheses = true;
-                }
-                else
-                {
-                    throw new FormulaFormatException("Unexpected variable where an operand is not expected.");
-                }
+                HandleOperand(token, ref isNextTokenOperand, ref hasTokenInsideParentheses);
             }
-            else if (double.TryParse(token, out double validatedNumericalValue))
+            else if (token == "(" || token == ")")
             {
-                if (isNextTokenOperand)
-                {
-                    this.validatedTokens.Add(validatedNumericalValue.ToString());
-                    isNextTokenOperand = false;
-                    hasTokenInsideParentheses = true;
-                }
-                else
-                {
-                    throw new FormulaFormatException("Unexpected number where an operand is not expected.");
-                }
-            }
-            else if (token == "(")
-            {
-                parenthesisCounter++;
-                isNextTokenOperand = true;
-                this.validatedTokens.Add(token);
-                hasTokenInsideParentheses = false;
-            }
-            else if (token == ")")
-            {
-                parenthesisCounter--;
-                if (parenthesisCounter < 0)
-                {
-                    throw new FormulaFormatException("Mismatched parentheses");
-                }
-
-                if (!hasTokenInsideParentheses)
-                {
-                    throw new FormulaFormatException("Empty parentheses are not allowed.");
-                }
-
-                this.validatedTokens.Add(token);
-                isNextTokenOperand = false;
+                HandleParenthesis(token, ref parenthesisCounter, ref isNextTokenOperand, hasTokenInsideParentheses);
             }
             else if (token == "+" || token == "-" || token == "*" || token == "/")
             {
-                if (!isNextTokenOperand)
-                {
-                    this.validatedTokens.Add(token);
-                    isNextTokenOperand = true;
-                }
-                else
-                {
-                    throw new FormulaFormatException("Unexpected operator where an operand is expected.");
-                }
+                HandleOperator(token, ref isNextTokenOperand);
             }
+
+            // If any other token is present that was not covered above, throw a FormulaFormatException.
             else
             {
-                throw new FormulaFormatException("Invalid token in formula.");
+                throw new FormulaFormatException("Invalid token present in the formula.");
             }
         }
 
         if (parenthesisCounter != 0)
         {
-            throw new FormulaFormatException("Mismatched parentheses.");
+            throw new FormulaFormatException("Mismatched number of parentheses found/ parentheses are not balanced.");
         }
 
         // Join the strings in the validatedTokens list without any spaces and store it in the canonicalFormula string variable
@@ -170,19 +124,17 @@ public class Formula
     /// <returns> the set of variables (string names) representing the variables referenced by the formula. </returns>
     public ISet<string> GetVariables()
     {
-        // Create a HashSet to hold unique variables
-        HashSet<string> variables = new();
+        HashSet<string> uniqueVariables = new();
 
-        // Iterate through tokens and add variables to the set
         foreach (string token in this.validatedTokens)
         {
             if (IsVar(token))
             {
-                variables.Add(token.ToUpper());
+                uniqueVariables.Add(token.ToUpper());
             }
         }
 
-        return variables;
+        return uniqueVariables;
     }
 
     /// <summary>
@@ -264,6 +216,97 @@ public class Formula
         }
 
         return results;
+    }
+
+    /// <summary>
+    /// Validates operands (variables and numbers) in the formula, whether they are expected to be placed there.
+    /// </summary>
+    /// <param name="token">The current token being processed.</param>
+    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
+    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.<</param>
+    /// <exception cref="FormulaFormatException">Exception thrown if an invalid operand is found or it should not be present in the formula based on the token beside it.</exception>
+    private void HandleOperand(string token, ref bool isNextTokenOperand, ref bool hasTokenInsideParentheses)
+    {
+        if (IsVar(token))
+        {
+            if (isNextTokenOperand)
+            {
+                this.validatedTokens.Add(token.ToUpper());
+                isNextTokenOperand = false;
+                hasTokenInsideParentheses = true;
+            }
+            else
+            {
+                throw new FormulaFormatException("Invalid or unexpected variable here where it is not expected.");
+            }
+        }
+        else if (double.TryParse(token, out double validatedNumericalValue))
+        {
+            if (isNextTokenOperand)
+            {
+                this.validatedTokens.Add(validatedNumericalValue.ToString());
+                isNextTokenOperand = false;
+                hasTokenInsideParentheses = true;
+            }
+            else
+            {
+                throw new FormulaFormatException("Invalid or unexpected number here where it is not expected.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Validates parenthesis in the formula, ensuring there is an equal, balanced amount in the right order.
+    /// </summary>
+    /// <param name="token">The current token being processed.</param>
+    /// <param name="parenthesisCounter">Counter for the number of open and close parenthesis.</param>
+    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
+    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.</param>
+    /// <exception cref="FormulaFormatException">Exception thrown if there are mismatched,unbalanced, or empty parentheses.</exception>
+    private void HandleParenthesis(string token, ref int parenthesisCounter, ref bool isNextTokenOperand, bool hasTokenInsideParentheses)
+    {
+        if (token == "(")
+        {
+            parenthesisCounter++;
+            isNextTokenOperand = true;
+            this.validatedTokens.Add(token);
+            hasTokenInsideParentheses = false;
+        }
+        else if (token == ")")
+        {
+            parenthesisCounter--;
+            if (parenthesisCounter < 0)
+            {
+                throw new FormulaFormatException("Mismatched number of parentheses found/ parentheses are not balanced.");
+            }
+
+            if (!hasTokenInsideParentheses)
+            {
+                throw new FormulaFormatException("Empty parentheses without any valid token inside is invalid.");
+            }
+
+            this.validatedTokens.Add(token);
+            isNextTokenOperand = false;
+        }
+    }
+
+    /// <summary>
+    /// Validates operators in the formula based on the token beside it.
+    /// </summary>
+    /// <param name="token">The current token being processed.</param>
+    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
+    /// <exception cref="FormulaFormatException">Exception thrown if an unexpected operator is found.</exception>
+    private void HandleOperator(string token, ref bool isNextTokenOperand)
+    {
+        if (!isNextTokenOperand)
+        {
+            this.validatedTokens.Add(token);
+            isNextTokenOperand = true;
+        }
+        else
+        {
+            throw new FormulaFormatException("Unexpected operator present where it is not expected.");
+        }
     }
 }
 
