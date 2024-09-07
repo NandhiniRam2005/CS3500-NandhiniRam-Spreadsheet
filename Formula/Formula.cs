@@ -113,6 +113,7 @@ public class Formula
         }
 
         // Join the strings in the validatedTokens list without any spaces and store it in the canonicalFormula string variable
+        // I found this method's documentation here: https://learn.microsoft.com/en-us/dotnet/api/system.string?view=net-8.0
         this.canonicalFormula = string.Join(string.Empty, this.validatedTokens);
     }
 

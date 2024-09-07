@@ -5,14 +5,20 @@ Start Date: 30-Aug-2024
 Course:     CS 3505, University of Utah, School of Computing
 GitHub ID:  NandhiniRam2005
 Repo:       https://github.com/uofu-cs3500-20-fall2024/spreadsheet-NandhiniRam2005
-Commit Date: 6-Sep-2024 6:00pm
+Commit Date: 6-Sep-2024 9:20pm
 Project:    Formula
 Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for use in Academic Coursework.
 ```
 
 # Comments to Evaluators:
 
-None, my work stands on its own.
+For the ToSTring method in this Formula class, I initially thought of using a StringBuilder to concatenate 
+the list of valid tokens into a string without any spaces. When I looked more into the string class in C#, I 
+found that there is a string.join method that exists. I chose to use the string.join method because the code
+is simpler, concise, and has better readability. As I looked into it more, The performance of both the STringBuilder 
+and string.join method have a similar O(N) complexity. It was also easier since I didn't have to create a new object 
+and write up a for loop. The string.join method just takes in a string separator (in this case no spaces) and the list
+of string elements which was only one line of code.
 
 # Assignment Specific Topics
 This assignment focuses on creating a Formula object to evaluate mathematical expressions 
