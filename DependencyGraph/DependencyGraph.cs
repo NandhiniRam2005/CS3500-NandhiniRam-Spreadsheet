@@ -100,6 +100,7 @@ public class DependencyGraph
     /// <returns> true if the node has dependents. </returns>
     public bool HasDependents(string nodeName)
     {
+        // Check whether the nodeName is in the Map and check if its value (HashSet) is not empty.
         return dependentsMap.ContainsKey(nodeName) && dependentsMap[nodeName].Count > 0;
     }
 
@@ -110,6 +111,7 @@ public class DependencyGraph
     /// <param name="nodeName">The name of the node.</param>
     public bool HasDependees(string nodeName)
     {
+        // Check whether the nodeName is in the Map and check if its value (HashSet) is not empty.
         return dependeesMap.ContainsKey(nodeName) && dependeesMap[nodeName].Count > 0;
     }
 
@@ -122,7 +124,14 @@ public class DependencyGraph
     /// <returns> The dependents of nodeName. </returns>
     public IEnumerable<string> GetDependents(string nodeName)
     {
-        return new List<string>(); // Choose your own data structure
+        if (dependentsMap.ContainsKey(nodeName))
+        {
+            return dependentsMap[nodeName];
+        }
+        else
+        {
+            return new HashSet<string>();
+        }
     }
 
     /// <summary>
@@ -134,7 +143,14 @@ public class DependencyGraph
     /// <returns> The dependees of nodeName. </returns>
     public IEnumerable<string> GetDependees(string nodeName)
     {
-        return new List<string>(); // Choose your own data structure
+        if (dependeesMap.ContainsKey(nodeName))
+        {
+            return dependeesMap[nodeName];
+        }
+        else
+        {
+            return new HashSet<string>();
+        }
     }
 
     /// <summary>
@@ -149,6 +165,33 @@ public class DependencyGraph
     /// <param name="dependent"> The name of the node that cannot be evaluated until after the other node has been. </param>
     public void AddDependency(string dependee, string dependent)
     {
+        bool dependencyAdded = false;
+
+        // Add dependent to dependentsMap
+        if (!dependentsMap.ContainsKey(dependee))
+        {
+            dependentsMap[dependee] = new HashSet<string>();
+        }
+        if (dependentsMap[dependee].Add(dependent))
+        {
+            dependencyAdded = true;
+        }
+
+        // Add dependee to dependeesMap
+        if (!dependeesMap.ContainsKey(dependent))
+        {
+            dependeesMap[dependent] = new HashSet<string>();
+        }
+        if (dependeesMap[dependent].Add(dependee))
+        {
+            dependencyAdded = true;
+        }
+
+        // Update size
+        if (dependencyAdded)
+        {
+            size++;
+        }
     }
 
     /// <summary>
@@ -160,6 +203,39 @@ public class DependencyGraph
     /// <param name="dependent"> The name of the node that cannot be evaluated until the other node has been. </param>
     public void RemoveDependency(string dependee, string dependent)
     {
+        bool dependencyRemoved = false;
+
+        // Remove dependent from dependentsMap
+        if (dependentsMap.ContainsKey(dependee) && dependentsMap[dependee].Contains(dependent))
+        {
+            dependentsMap[dependee].Remove(dependent);
+            dependencyRemoved = true;
+
+            // If there are no more dependents, remove the dependee entry from the map
+            if (dependentsMap[dependee].Count == 0)
+            {
+                dependentsMap.Remove(dependee);
+            }
+        }
+
+        // Remove dependee from dependeesMap
+        if (dependeesMap.ContainsKey(dependent) && dependeesMap[dependent].Contains(dependee))
+        {
+            dependeesMap[dependent].Remove(dependee);
+            dependencyRemoved = true;
+
+            // If there are no more dependees, remove the dependent entry from the map
+            if (dependeesMap[dependent].Count == 0)
+            {
+                dependeesMap.Remove(dependent);
+            }
+        }
+
+        // Update size
+        if (dependencyRemoved)
+        {
+            size--;
+        }
     }
 
     /// <summary>

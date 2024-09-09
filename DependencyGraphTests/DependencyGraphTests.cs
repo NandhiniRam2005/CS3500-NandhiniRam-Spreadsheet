@@ -246,8 +246,7 @@ public class DependencyGraphExampleStressTests
         graph.AddDependency("k", "t");
         graph.AddDependency("n", "s");
 
-        // Change IEnumerable<string> return type to a HashSet so that it can be compared and tested.
-        var actual = graph.GetDependents("n").ToHashSet();
+        var actual = graph.GetDependents("n");
         var expected = new HashSet<string> { "t", "s" };
 
         Assert.IsTrue(expected.SetEquals(actual));
@@ -283,7 +282,7 @@ public class DependencyGraphExampleStressTests
         graph.AddDependency("k", "t");
 
         // Change IEnumerable<string> return type to a HashSet so that it can be compared and tested.
-        var actual = graph.GetDependees("t").ToHashSet();
+        var actual = graph.GetDependees("t");
         var expected = new HashSet<string> { "n", "k" };
 
         Assert.IsTrue(expected.SetEquals(actual));
@@ -301,7 +300,7 @@ public class DependencyGraphExampleStressTests
         graph.AddDependency("n", "t");
         graph.AddDependency("k", "t");
 
-        Assert.AreEqual(0, graph.GetDependents("n").Count());
+        Assert.AreEqual(0, graph.GetDependees("n").Count());
     }
 
     // --- Tests for the AddDependency method ---
