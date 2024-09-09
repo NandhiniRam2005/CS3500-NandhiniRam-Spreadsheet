@@ -5,6 +5,24 @@
 // (Clarified meaning of dependent and dependee.)
 // (Clarified names in solution/project structure.)
 
+/// <summary>
+/// Author:    Nandhini Ramanathan, Joe Zachary, Daniel Kopta, and H. James de St. Germain
+/// Partner:   None
+/// Date:      September 13,2024
+/// Course:    CS 3500, University of Utah, School of Computing
+/// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
+///            be copied for use in Academic Coursework.
+///
+/// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
+/// did not copy it in part or whole from another source.  All
+/// references used in the completion of the assignments are cited
+/// in my README file.
+///
+/// File Contents
+/// This file implements a DependencyGraph that manages dependencies between strings 
+/// in a directed graph.
+/// </summary>
+
 namespace CS3500.DependencyGraph;
 
 /// <summary>
@@ -17,11 +35,6 @@ namespace CS3500.DependencyGraph;
 ///     Two ordered pairs (s1,t1) and (s2,t2) are considered equal if and only
 ///     if s1 equals s2 and t1 equals t2.
 ///   </para>
-///   <remarks>
-///     Recall that sets never contain duplicates.
-///     If an attempt is made to add an element to a set, and the element is already
-///     in the set, the set remains unchanged.
-///   </remarks>
 ///   <para>
 ///     Given a DependencyGraph DG:
 ///   </para>
@@ -51,13 +64,25 @@ namespace CS3500.DependencyGraph;
 /// </summary>
 public class DependencyGraph
 {
+    // A dictionary where the key is a node and the value is a HashSet of nodes that depend on it.
+    private Dictionary<string, HashSet<string>> dependentsMap;
+
+    // A dictionary where the key is a node and the value is a HashSet of nodes that the key depends on.
+    private Dictionary<string, HashSet<string>> dependeesMap;
+
+    // The number of dependencies (pairs) in the graph.
+    private int size;
+
     /// <summary>
     ///   Initializes a new instance of the <see cref="DependencyGraph"/> class.
     ///   The initial DependencyGraph is empty.
     /// </summary>
     public DependencyGraph()
     {
+        dependentsMap = new Dictionary<string, HashSet<string>>();
+        dependeesMap = new Dictionary<string, HashSet<string>>();
 
+        size = 0;
     }
 
     /// <summary>
@@ -65,7 +90,7 @@ public class DependencyGraph
     /// </summary>
     public int Size
     {
-        get { return 0; }
+        get { return size; }
     }
 
     /// <summary>
@@ -75,7 +100,7 @@ public class DependencyGraph
     /// <returns> true if the node has dependents. </returns>
     public bool HasDependents(string nodeName)
     {
-        return false;
+        return dependentsMap.ContainsKey(nodeName) && dependentsMap[nodeName].Count > 0;
     }
 
     /// <summary>
@@ -85,7 +110,7 @@ public class DependencyGraph
     /// <param name="nodeName">The name of the node.</param>
     public bool HasDependees(string nodeName)
     {
-        return false;
+        return dependeesMap.ContainsKey(nodeName) && dependeesMap[nodeName].Count > 0;
     }
 
     /// <summary>

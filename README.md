@@ -22,19 +22,19 @@ calculating the formulas mathematically, and adding GUIs for a visual element to
 
 # Time Expenditures:
 
-    1. Assignment 1:      Predicted Hours:   4        Actual Hours:   5
-    2. Assignment 2:      Predicted Hours:   7        Actual Hours:   9
+    1. Assignment 1: Test Driven Development      Predicted Hours:   4        Actual Hours:   5
+    2. Assignment 2: Formula Class                Predicted Hours:   7        Actual Hours:   9
 
-                                                        Hours spent -
-                                                          Effectively:      5  
-                                                          Debugging:        2
-                                                          Learning tools:   2
+                                                                              Hours spent -
+                                                                                Effectively:      5  
+                                                                                Debugging:        2
+                                                                                Learning tools:   2
 
-    2. Assignment 3:      Predicted Hours:   9        Actual Hours:   
+    2. Assignment 3: Dependency Graph Class       Predicted Hours:   9        Actual Hours:   
 
-                                                        Hours spent -
-                                                          Effectively:       
-                                                          Debugging:        
-                                                          Learning tools:   
+                                                                              Hours spent -
+                                                                                Effectively:       
+                                                                                Debugging:        
+                                                                                Learning tools:   
                                                              
                                                              

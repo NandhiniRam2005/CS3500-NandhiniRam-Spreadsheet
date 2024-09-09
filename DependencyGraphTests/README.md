@@ -12,9 +12,10 @@ Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for us
 
 # Comments to Evaluators:
 
-BLABLABLA
+None
 
 # Assignment Specific Topics
+
 This assignment project is a MS unit tester class for the DependencyGraph class.
 
 # Consulted Peers:

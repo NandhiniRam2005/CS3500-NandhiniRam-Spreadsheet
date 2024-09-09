@@ -12,10 +12,15 @@ Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for us
 
 # Comments to Evaluators:
 
-BLABLA
+None
 
 # Assignment Specific Topics
-BLABLA
+
+This project implements a DependencyGraph class, where a DependencyGraph is 
+a collection of dependencies between strings, where a string (node) may depend 
+on others (dependees) or may be depended upon by others (dependents). 
+The class provides methods to manage these dependencies, retrieve dependents 
+and dependees of nodes, and modify dependencies between nodes.
 
 # Consulted Peers:
 
