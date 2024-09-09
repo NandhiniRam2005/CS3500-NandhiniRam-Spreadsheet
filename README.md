@@ -5,7 +5,7 @@ Start Date: 30-Aug-2024
 Course:     CS 3505, University of Utah, School of Computing
 GitHub ID:  NandhiniRam2005
 Repo:       https://github.com/uofu-cs3500-20-fall2024/spreadsheet-NandhiniRam2005
-Commit Date: 6-Sep-2024 9:20pm
+Commit Date: 13-Sep-2024 9:20pm
 Solution:   Spreadsheet
 Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for use in Academic Coursework.
 ```
@@ -15,10 +15,13 @@ Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for us
 The Spreadsheet program is currently capable of constructing a formula and checking its validity.
 It checks the tokens in the formula including variables, numeric values, parenthesis, and normalizes 
 them when necessary, throwing a FormulaFormatException when invalid tokens are present with a meaningful message.
-The program also includes methods to retrieve variables from formulas and return formulas as strings.
 
-Future extensions of the program include implementing a dependency graph to manage cell relationships, 
-calculating the formulas mathematically, and adding GUIs for a visual element to the Spreadsheet.
+The program has been extended to include the implementation of a Dependency Graph. The Dependency Graph
+manages relationships between cells, where one cell can depend on another. This graph enables efficient 
+updates to cells when dependencies change, ensuring proper recalculations.
+
+Future extensions include using this dependency graph to evaluate and compute formulas across the spreadsheet 
+and implementing a GUI for a visual element to the Spreadsheet.
 
 # Time Expenditures:
 
