@@ -246,17 +246,92 @@ public class DependencyGraph
     /// <param name="newDependents"> The new dependents for nodeName. </param>
     public void ReplaceDependents(string nodeName, IEnumerable<string> newDependents)
     {
+        // Remove all existing dependents of nodeName
+        if (dependentsMap.ContainsKey(nodeName))
+        {
+            foreach (string oldDependent in dependentsMap[nodeName])
+            {
+                // Remove nodeName from the dependees of each old dependent
+                if (dependeesMap.ContainsKey(oldDependent))
+                {
+                    dependeesMap[oldDependent].Remove(nodeName);
+
+                    if (dependeesMap[oldDependent].Count == 0)
+                    {
+                        dependeesMap.Remove(oldDependent);
+                    }
+                }
+            }
+            // Remove the nodeName entry if it has no more dependents
+            dependentsMap.Remove(nodeName);
+        }
+
+        // Add new dependents
+        foreach (var dependent in newDependents)
+        {
+            // Add nodeName to the dependees of each new dependent
+            if (!dependeesMap.ContainsKey(dependent))
+            {
+                dependeesMap[dependent] = new HashSet<string>();
+            }
+            dependeesMap[dependent].Add(nodeName);
+
+            // Add the dependent to the dependentsMap
+            if (!dependentsMap.ContainsKey(nodeName))
+            {
+                dependentsMap[nodeName] = new HashSet<string>();
+            }
+            dependentsMap[nodeName].Add(dependent);
+        }
     }
 
-    /// <summary>
-    ///   <para>
-    ///     Removes all existing ordered pairs of the form (*, nodeName).  Then, for each
-    ///     t in newDependees, adds the ordered pair (t, nodeName).
-    ///   </para>
-    /// </summary>
-    /// <param name="nodeName"> The name of the node who's dependees are being replaced. </param>
-    /// <param name="newDependees"> The new dependees for nodeName. Could be empty.</param>
-    public void ReplaceDependees(string nodeName, IEnumerable<string> newDependees)
-    {
+        /// <summary>
+        ///   <para>
+        ///     Removes all existing ordered pairs of the form (*, nodeName).  Then, for each
+        ///     t in newDependees, adds the ordered pair (t, nodeName).
+        ///   </para>
+        /// </summary>
+        /// <param name="nodeName"> The name of the node who's dependees are being replaced. </param>
+        /// <param name="newDependees"> The new dependees for nodeName. Could be empty.</param>
+        public void ReplaceDependees(string nodeName, IEnumerable<string> newDependees)
+        {
+            // Remove all existing dependees of nodeName
+            if (dependeesMap.ContainsKey(nodeName))
+            {
+                foreach (string oldDependee in dependeesMap[nodeName])
+                {
+                    // Remove nodeName from the dependents of each old dependee
+                    if (dependentsMap.ContainsKey(oldDependee))
+                    {
+                        dependentsMap[oldDependee].Remove(nodeName);
+
+                        if (dependentsMap[oldDependee].Count == 0)
+                        {
+                            dependentsMap.Remove(oldDependee);
+                        }
+                    }
+                }
+
+                // Remove the nodeName entry if it has no more dependees
+                dependeesMap.Remove(nodeName);
+            }
+
+            // Add new dependees
+            foreach (var dependee in newDependees)
+            {
+                // Add nodeName to the dependents of each new dependee
+                if (!dependentsMap.ContainsKey(dependee))
+                {
+                    dependentsMap[dependee] = new HashSet<string>();
+                }
+                dependentsMap[dependee].Add(nodeName);
+
+                // Add the dependee to the dependeesMap
+                if (!dependeesMap.ContainsKey(nodeName))
+                {
+                    dependeesMap[nodeName] = new HashSet<string>();
+                }
+                dependeesMap[nodeName].Add(dependee);
+            }
+        }
     }
-}
