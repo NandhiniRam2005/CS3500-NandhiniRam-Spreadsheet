@@ -24,5 +24,5 @@ Joel Rodriguez
 
 # References:
 
-    1. bla - bla's link
+    1. C# | Count the total number of elements in the List - https://www.geeksforgeeks.org/c-sharp-count-the-total-number-of-elements-in-the-list/
 
