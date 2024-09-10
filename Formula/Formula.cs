@@ -107,6 +107,13 @@ public class Formula
             }
         }
 
+        // Check if the last token is invalid (operator)
+        string lastToken = tokensInFormula.Last();
+        if (lastToken == "+" || lastToken == "-" || lastToken == "*" || lastToken == "/")
+        {
+            throw new FormulaFormatException("Formula cannot end with an operator.");
+        }
+
         if (parenthesisCounter != 0)
         {
             throw new FormulaFormatException("Mismatched number of parentheses found/ parentheses are not balanced.");

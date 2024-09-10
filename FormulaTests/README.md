@@ -12,7 +12,9 @@ Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for us
 
 # Comments to Evaluators:
 
-None.
+I have added the FormulaGradingTests1 to this file to debug my code and have fixed them so all the autograder tests pass.
+There were two tests failing, both needed the same fix by checking the last token in my formula and throwing a 
+FormulaFormatException when the last token is an operator.
 
 # Assignment Specific Topics
 This assignment project is a MS unit tester class for the Formula class.

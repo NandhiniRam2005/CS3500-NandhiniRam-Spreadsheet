@@ -34,4 +34,6 @@ Joel Rodriguez
     1. C# Tutorial - https://www.w3schools.com/cs/index.php
     2. Recommended XML tags for C# documentation comments - https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/recommended-tags?redirectedfrom=MSDN
     3. String Class - https://learn.microsoft.com/en-us/dotnet/api/system.string?view=net-8.0
+    4. C# | How to get the last occurrence of the element in the List that match the specified conditions - https://www.geeksforgeeks.org/c-sharp-how-to-get-the-last-occurrence-of-the-element-in-the-list-that-match-the-specified-conditions/
+
 
