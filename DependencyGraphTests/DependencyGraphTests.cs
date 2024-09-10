@@ -1,4 +1,4 @@
-// <copyright file="FormulaSyntaxTests.cs" company="UofU-CS3500">
+// <copyright file="DependencyGraphTests.cs" company="UofU-CS3500">
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
@@ -25,12 +25,11 @@ using CS3500.DependencyGraph;
 
 /// <summary>
 /// This is a test class for DependencyGraphTest and is intended
-/// to contain all DependencyGraphTest Unit Tests
+/// to contain all DependencyGraphTest Unit Tests.
 /// </summary>
 [TestClass]
 public class DependencyGraphExampleStressTests
 {
-
     // --- Stress Tests ---
 
     /// <summary>
@@ -42,6 +41,7 @@ public class DependencyGraphExampleStressTests
     public void StressTest()
     {
         DependencyGraph dg = new();
+
         // A bunch of strings to use
         const int SIZE = 200;
         string[] letters = new string[SIZE];
@@ -49,6 +49,7 @@ public class DependencyGraphExampleStressTests
         {
             letters[i] = string.Empty + ((char)('a' + i));
         }
+
         // The correct answers
         HashSet<string>[] dependents = new HashSet<string>[SIZE];
         HashSet<string>[] dependees = new HashSet<string>[SIZE];
@@ -57,6 +58,7 @@ public class DependencyGraphExampleStressTests
             dependents[i] = [];
             dependees[i] = [];
         }
+
         // Add a bunch of dependencies
         for (int i = 0; i < SIZE; i++)
         {
@@ -67,6 +69,7 @@ public class DependencyGraphExampleStressTests
                 dependees[j].Add(letters[i]);
             }
         }
+
         // Remove a bunch of dependencies
         for (int i = 0; i < SIZE; i++)
         {
@@ -77,6 +80,7 @@ public class DependencyGraphExampleStressTests
                 dependees[j].Remove(letters[i]);
             }
         }
+
         // Add some back
         for (int i = 0; i < SIZE; i++)
         {
@@ -87,6 +91,7 @@ public class DependencyGraphExampleStressTests
                 dependees[j].Add(letters[i]);
             }
         }
+
         // Remove some more
         for (int i = 0; i < SIZE; i += 2)
         {
@@ -97,6 +102,7 @@ public class DependencyGraphExampleStressTests
                 dependees[j].Remove(letters[i]);
             }
         }
+
         // Make sure everything is right
         for (int i = 0; i < SIZE; i++)
         {
@@ -114,7 +120,7 @@ public class DependencyGraphExampleStressTests
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
-    public void DependencyGraphConstructor_InitializeEmptyDependencyGraph_SizeIsZero() 
+    public void DependencyGraphConstructor_InitializeEmptyDependencyGraph_SizeIsZero()
     {
         DependencyGraph graph = new DependencyGraph();
         Assert.AreEqual(0, graph.Size);
@@ -253,7 +259,7 @@ public class DependencyGraphExampleStressTests
     }
 
     /// <summary>
-    /// This tests makes sure that the GetDependents method returns an empty IEnumerable<string> when node has no dependents.
+    /// This tests makes sure that the GetDependents method returns an empty IEnumerable of type string when node has no dependents.
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
@@ -289,7 +295,7 @@ public class DependencyGraphExampleStressTests
     }
 
     /// <summary>
-    /// This tests makes sure that the GetDependees method returns an empty IEnumerable<string> when node has no dependees.
+    /// This tests makes sure that the GetDependees method returns an empty IEnumerable of type string when node has no dependees.
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
@@ -480,5 +486,4 @@ public class DependencyGraphExampleStressTests
 
         Assert.IsTrue(expectedDependents.SetEquals(actualDependents));
     }
-
 }

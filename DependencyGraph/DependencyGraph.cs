@@ -1,4 +1,7 @@
-﻿// Skeleton implementation written by Joe Zachary for CS 3500, September 2013.
+﻿// <copyright file="DependencyGraph.cs" company="UofU-CS3500">
+//   Copyright (c) 2024 UofU-CS3500. All rights reserved.
+// </copyright>
+// Skeleton implementation written by Joe Zachary for CS 3500, September 2013.
 // Version 1.1 (Fixed error in comment for RemoveDependency.)
 // Version 1.2 - Daniel Kopta
 // Version 1.3 - H. James de St. Germain Fall 2024
@@ -19,7 +22,7 @@
 /// in my README file.
 ///
 /// File Contents
-/// This file implements a DependencyGraph that manages dependencies between strings 
+/// This file implements a DependencyGraph that manages dependencies between strings
 /// in a directed graph.
 /// </summary>
 
@@ -86,7 +89,7 @@ public class DependencyGraph
     }
 
     /// <summary>
-    /// The number of ordered pairs in the DependencyGraph.
+    /// Gets the number of ordered pairs in the DependencyGraph.
     /// </summary>
     public int Size
     {
@@ -154,7 +157,7 @@ public class DependencyGraph
     }
 
     /// <summary>
-    /// <para> 
+    /// <para>
     ///   Adds the ordered pair (dependee, dependent), if it doesn't already exist (otherwise nothing happens).
     /// </para>
     /// <para>
@@ -172,6 +175,7 @@ public class DependencyGraph
         {
             dependentsMap[dependee] = new HashSet<string>();
         }
+
         if (dependentsMap[dependee].Add(dependent))
         {
             dependencyAdded = true;
@@ -182,6 +186,7 @@ public class DependencyGraph
         {
             dependeesMap[dependent] = new HashSet<string>();
         }
+
         if (dependeesMap[dependent].Add(dependee))
         {
             dependencyAdded = true;
@@ -251,87 +256,40 @@ public class DependencyGraph
         {
             foreach (string oldDependent in dependentsMap[nodeName])
             {
-                // Remove nodeName from the dependees of each old dependent
-                if (dependeesMap.ContainsKey(oldDependent))
-                {
-                    dependeesMap[oldDependent].Remove(nodeName);
-
-                    if (dependeesMap[oldDependent].Count == 0)
-                    {
-                        dependeesMap.Remove(oldDependent);
-                    }
-                }
+                RemoveDependency(nodeName, oldDependent);
             }
-            // Remove the nodeName entry if it has no more dependents
-            dependentsMap.Remove(nodeName);
         }
 
         // Add new dependents
         foreach (var dependent in newDependents)
         {
-            // Add nodeName to the dependees of each new dependent
-            if (!dependeesMap.ContainsKey(dependent))
-            {
-                dependeesMap[dependent] = new HashSet<string>();
-            }
-            dependeesMap[dependent].Add(nodeName);
-
-            // Add the dependent to the dependentsMap
-            if (!dependentsMap.ContainsKey(nodeName))
-            {
-                dependentsMap[nodeName] = new HashSet<string>();
-            }
-            dependentsMap[nodeName].Add(dependent);
+            AddDependency(nodeName, dependent);
         }
     }
 
-        /// <summary>
-        ///   <para>
-        ///     Removes all existing ordered pairs of the form (*, nodeName).  Then, for each
-        ///     t in newDependees, adds the ordered pair (t, nodeName).
-        ///   </para>
-        /// </summary>
-        /// <param name="nodeName"> The name of the node who's dependees are being replaced. </param>
-        /// <param name="newDependees"> The new dependees for nodeName. Could be empty.</param>
-        public void ReplaceDependees(string nodeName, IEnumerable<string> newDependees)
+    /// <summary>
+    ///   <para>
+    ///     Removes all existing ordered pairs of the form (*, nodeName).  Then, for each
+    ///     t in newDependees, adds the ordered pair (t, nodeName).
+    ///   </para>
+    /// </summary>
+    /// <param name="nodeName"> The name of the node who's dependees are being replaced. </param>
+    /// <param name="newDependees"> The new dependees for nodeName. Could be empty.</param>
+    public void ReplaceDependees(string nodeName, IEnumerable<string> newDependees)
+    {
+        // Remove all existing dependees of nodeName
+        if (dependeesMap.ContainsKey(nodeName))
         {
-            // Remove all existing dependees of nodeName
-            if (dependeesMap.ContainsKey(nodeName))
+            foreach (string oldDependee in dependeesMap[nodeName])
             {
-                foreach (string oldDependee in dependeesMap[nodeName])
-                {
-                    // Remove nodeName from the dependents of each old dependee
-                    if (dependentsMap.ContainsKey(oldDependee))
-                    {
-                        dependentsMap[oldDependee].Remove(nodeName);
-
-                        if (dependentsMap[oldDependee].Count == 0)
-                        {
-                            dependentsMap.Remove(oldDependee);
-                        }
-                    }
-                }
-
-                // Remove the nodeName entry if it has no more dependees
-                dependeesMap.Remove(nodeName);
-            }
-
-            // Add new dependees
-            foreach (var dependee in newDependees)
-            {
-                // Add nodeName to the dependents of each new dependee
-                if (!dependentsMap.ContainsKey(dependee))
-                {
-                    dependentsMap[dependee] = new HashSet<string>();
-                }
-                dependentsMap[dependee].Add(nodeName);
-
-                // Add the dependee to the dependeesMap
-                if (!dependeesMap.ContainsKey(nodeName))
-                {
-                    dependeesMap[nodeName] = new HashSet<string>();
-                }
-                dependeesMap[nodeName].Add(dependee);
+                RemoveDependency(oldDependee, nodeName);
             }
         }
+
+        // Add new dependees
+        foreach (var dependee in newDependees)
+        {
+            AddDependency(dependee, nodeName);
+        }
     }
+}
