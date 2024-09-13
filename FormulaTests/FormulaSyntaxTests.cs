@@ -511,6 +511,18 @@ public class FormulaSyntaxTests
         _ = new Formula("67+(90)");
     }
 
+    /// <summary>
+    ///    <para>
+    ///     This test makes sure an operator as the last token is invalid.
+    ///    </para>
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(FormulaFormatException))]
+    public void FormulaConstructor_TestLastTokenOperator_Invalid()
+    {
+        _ = new Formula("0 +");
+    }
+
     // --- Tests for Parentheses/Operator Following Rule ---
 
     /// <summary>
