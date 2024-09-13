@@ -33,24 +33,28 @@ public class DependencyGraphExampleStressTests
     // --- Stress Tests ---
 
     /// <summary>
-    /// FIXME: !!!!!!!!!!!!!!!!!!!!!!!!!!Explain carefully what this code tests.
-    /// Also, update in-line comments as appropriate.
+    /// This stress test is from the assignment starter code.
+    /// This test performs a series of operations using all the methods in DependencyGraph
+    /// to make sure that combining these tasks runs quickly and correctly. This test makes a
+    /// graph of 200 nodes that depend on all teh nodes after it. Then, it removes some dependencies 
+    /// in a pattern and adds more in another pattern. It removes some more dependencies and ensures
+    /// getting these dependents and dependees returns the expected result.
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
     public void StressTest()
     {
         DependencyGraph dg = new();
-
-        // A bunch of strings to use
         const int SIZE = 200;
+
+        // Initialize an array of 200 strings by incrementing the char index starting from a to represent letters.
         string[] letters = new string[SIZE];
         for (int i = 0; i < SIZE; i++)
         {
             letters[i] = string.Empty + ((char)('a' + i));
         }
 
-        // The correct answers
+        // HashSets are initialized to represent the dependents and dependees for each letter.
         HashSet<string>[] dependents = new HashSet<string>[SIZE];
         HashSet<string>[] dependees = new HashSet<string>[SIZE];
         for (int i = 0; i < SIZE; i++)
@@ -59,7 +63,8 @@ public class DependencyGraphExampleStressTests
             dependees[i] = [];
         }
 
-        // Add a bunch of dependencies
+        // Dependencies are added in a loop.
+        // Each letter depends on all the letters that come after it.
         for (int i = 0; i < SIZE; i++)
         {
             for (int j = i + 1; j < SIZE; j++)
@@ -70,7 +75,7 @@ public class DependencyGraphExampleStressTests
             }
         }
 
-        // Remove a bunch of dependencies
+        // For each letter, remove the dependency on every fourth letter after it.
         for (int i = 0; i < SIZE; i++)
         {
             for (int j = i + 4; j < SIZE; j += 4)
@@ -81,7 +86,7 @@ public class DependencyGraphExampleStressTests
             }
         }
 
-        // Add some back
+        // For each letter, add dependencies back to every second letter.
         for (int i = 0; i < SIZE; i++)
         {
             for (int j = i + 1; j < SIZE; j += 2)
@@ -92,7 +97,7 @@ public class DependencyGraphExampleStressTests
             }
         }
 
-        // Remove some more
+        // For every second letter, remove the dependency on every third letter after it.
         for (int i = 0; i < SIZE; i += 2)
         {
             for (int j = i + 3; j < SIZE; j += 3)
@@ -103,13 +108,95 @@ public class DependencyGraphExampleStressTests
             }
         }
 
-        // Make sure everything is right
+        // Make sure everything is right by checking that the actual dependents and dependees match the expected HashSets.
         for (int i = 0; i < SIZE; i++)
         {
             Assert.IsTrue(dependents[i].SetEquals(new
             HashSet<string>(dg.GetDependents(letters[i]))));
             Assert.IsTrue(dependees[i].SetEquals(new
             HashSet<string>(dg.GetDependees(letters[i]))));
+        }
+    }
+
+    /// <summary>
+    /// This attempted stress test is written by me.
+    /// This test performs a series of operations using all the methods in DependencyGraph
+    /// to make sure that combining these tasks runs quickly and correctly. This test makes a
+    /// graph of 400 nodes that depend on every other node after it. Then, it removes some dependencies
+    /// in a pattern and adds more in another pattern, then ensures getting these dependents and dependees
+    /// returns the expected result.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void Test_OverallScenarioStressTest_Outcome()
+    {
+        DependencyGraph dg = new();
+        const int SIZE = 200;
+
+        // Initialize an array of 400 strings called node and a number(index) attached to it.
+        string[] nodes = new string[SIZE];
+        for (int i = 0; i < SIZE; i++)
+        {
+            nodes[i] = "node" + i;
+        }
+
+        // HashSets are initialized to represent the dependents and dependees for each node.
+        HashSet<string>[] dependents = new HashSet<string>[SIZE];
+        HashSet<string>[] dependees = new HashSet<string>[SIZE];
+        for (int i = 0; i < SIZE; i++)
+        {
+            dependents[i] = [];
+            dependees[i] = [];
+        }
+
+        // // Add dependencies between every other node and all alternate nodes after it.
+        for (int i = 0; i < SIZE; i+=2)
+        {
+            for (int j = i + 1; j < SIZE; j+=2)
+            {
+                dg.AddDependency(nodes[i], nodes[j]);
+                dependents[i].Add(nodes[j]);
+                dependees[j].Add(nodes[i]);
+            }
+        }
+
+        // For each node, every third node removes the dependency to the next third node after it.
+        for (int i = 0; i < SIZE; i += 3)
+        {
+            for (int j = i + 3; j < SIZE; j += 3)
+            {
+                dg.RemoveDependency(nodes[i], nodes[j]);
+                dependents[i].Remove(nodes[j]);
+                dependees[j].Remove(nodes[i]);
+            }
+        }
+
+        // For each node, a random number of dependencies (between 1 and 10) are added to random nodes.
+        Random random = new();
+        for (int i = 0; i < SIZE; i++)
+        {
+            // Add 1 to 5 random dependencies for each node.
+            int numberOfDependencies = random.Next(1, 10);
+            for (int j = 0; j < numberOfDependencies; j++)
+            {
+                if (i + 1 < SIZE)
+                {
+                    // Pick random node after the current node.
+                    int randomNode = random.Next(i + 1, SIZE);
+                    dg.AddDependency(nodes[i], nodes[randomNode]);
+                    dependents[i].Add(nodes[randomNode]);
+                    dependees[randomNode].Add(nodes[i]);
+                }
+            }
+        }
+
+        // Make sure everything is right by checking that the actual dependents and dependees match the expected HashSets.
+        for (int i = 0; i < SIZE; i++)
+        {
+            Assert.IsTrue(dependents[i].SetEquals(new
+            HashSet<string>(dg.GetDependents(nodes[i]))));
+            Assert.IsTrue(dependees[i].SetEquals(new
+            HashSet<string>(dg.GetDependees(nodes[i]))));
         }
     }
 

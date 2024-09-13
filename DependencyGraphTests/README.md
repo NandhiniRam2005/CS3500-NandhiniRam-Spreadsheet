@@ -24,5 +24,7 @@ Joel Rodriguez
 
 # References:
 
-    1. C# | Count the total number of elements in the List - https://www.geeksforgeeks.org/c-sharp-count-the-total-number-of-elements-in-the-list/
+    1. Unit Testing with functions that return random results - https://stackoverflow.com/questions/311807/unit-testing-with-functions-that-return-random-results
+    2. Test Run: Randomness in Testing - https://learn.microsoft.com/en-us/archive/msdn-magazine/2006/september/test-run-randomness-in-testing
+
 
