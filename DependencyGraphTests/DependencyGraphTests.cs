@@ -36,7 +36,7 @@ public class DependencyGraphExampleStressTests
     /// This stress test is from the assignment starter code.
     /// This test performs a series of operations using all the methods in DependencyGraph
     /// to make sure that combining these tasks runs quickly and correctly. This test makes a
-    /// graph of 200 nodes that depend on all teh nodes after it. Then, it removes some dependencies 
+    /// graph of 200 nodes that depend on all teh nodes after it. Then, it removes some dependencies
     /// in a pattern and adds more in another pattern. It removes some more dependencies and ensures
     /// getting these dependents and dependees returns the expected result.
     /// </summary>
@@ -131,7 +131,7 @@ public class DependencyGraphExampleStressTests
     public void Test_OverallScenarioStressTest_Outcome()
     {
         DependencyGraph dg = new();
-        const int SIZE = 200;
+        const int SIZE = 700;
 
         // Initialize an array of 400 strings called node and a number(index) attached to it.
         string[] nodes = new string[SIZE];
@@ -296,6 +296,47 @@ public class DependencyGraphExampleStressTests
         Assert.IsFalse(graph.HasDependents("k"));
     }
 
+    /// <summary>
+    /// This tests makes sure that the HasDependents and HasDependees method identifies that a node can have both
+    /// dependees and dependents.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void HasDependentsAndDependees_MultipleDependencies_IsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.AddDependency("a", "c");
+        graph.AddDependency("b", "d");
+
+        Assert.IsTrue(graph.HasDependents("a"));
+
+        // b has dependees and dependents.
+        Assert.IsTrue(graph.HasDependees("b"));
+        Assert.IsTrue(graph.HasDependents("b"));
+
+        Assert.IsTrue(graph.HasDependees("c"));
+        Assert.IsTrue(graph.HasDependees("d"));
+    }
+
+    /// <summary>
+    /// This tests makes sure that the HasDependents and HasDependees method identifies that a node that is added and
+    /// then removed should not have any dependents or dependees anymore.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void HasDependentsAndDependees_AddAndRemoveDependency_IsFalse()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.RemoveDependency("a", "b");
+
+        Assert.IsFalse(graph.HasDependents("a"));
+        Assert.IsFalse(graph.HasDependees("b"));
+    }
+
     // --- Tests for the HasDependees method ---
 
     /// <summary>
@@ -360,6 +401,21 @@ public class DependencyGraphExampleStressTests
         Assert.AreEqual(0, graph.GetDependents("t").Count());
     }
 
+    /// <summary>
+    /// This tests makes sure that the GetDependents method has a size of one when a duplicate node is added.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void GetDependents_DuplicateDependencyAdded_CountEqualsOne()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("n", "t");
+        graph.AddDependency("n", "t");
+
+        Assert.AreEqual(1, graph.GetDependents("n").Count());
+    }
+
     // --- Tests for the GetDependees method ---
 
     /// <summary>
@@ -379,6 +435,21 @@ public class DependencyGraphExampleStressTests
         var expected = new HashSet<string> { "n", "k" };
 
         Assert.IsTrue(expected.SetEquals(actual));
+    }
+
+    /// <summary>
+    /// This tests makes sure that the GetDependees method has a size of one when a duplicate node is added.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void GetDependees_DuplicateDependencyAdded_CountEqualsOne()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("n", "t");
+        graph.AddDependency("n", "t");
+
+        Assert.AreEqual(1, graph.GetDependees("t").Count());
     }
 
     /// <summary>
@@ -464,6 +535,39 @@ public class DependencyGraphExampleStressTests
         Assert.AreEqual(0, graph.Size);
     }
 
+    /// <summary>
+    /// This tests makes sure that removing a node twice does not result in ana error and the size is zero.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void RemoveDependency_RemovingDependencyTwice_SizeIsZero()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("n", "k");
+        graph.RemoveDependency("n", "k");
+        graph.RemoveDependency("n", "k");
+        Assert.AreEqual(0, graph.Size);
+    }
+
+    /// <summary>
+    /// This tests makes sure that removing multiple all dependees has the expected result.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void RemoveDependency_RemoveAllDependencies_HasDependecyIsFalse()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("n", "r");
+        graph.AddDependency("n", "k");
+
+        graph.RemoveDependency("n", "r");
+        graph.RemoveDependency("n", "k");
+
+        Assert.IsFalse(graph.HasDependents("n"));
+    }
+
     // --- Tests for the ReplaceDependents method ---
 
     /// <summary>
@@ -519,10 +623,170 @@ public class DependencyGraphExampleStressTests
         Assert.IsTrue(expectedDependents.SetEquals(actualDependents));
     }
 
+    /// <summary>
+    /// This tests replaces dependents for multiple nodes and makes sure they return the expected result.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_MultipleNodes_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.AddDependency("c", "d");
+
+        graph.ReplaceDependents("a", new[] { "x", "y" });
+        graph.ReplaceDependents("c", new[] { "z" });
+
+        HashSet<string> expectedA = new HashSet<string> { "x", "y" };
+        HashSet<string> expectedC = new HashSet<string> { "z" };
+
+        Assert.IsTrue(expectedA.SetEquals(graph.GetDependents("a")));
+        Assert.IsTrue(expectedC.SetEquals(graph.GetDependents("c")));
+    }
+
+    /// <summary>
+    /// This test replaces dependents and adds duplicate dependents, result should ahve no duplicates.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_WithDuplicates_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.ReplaceDependents("a", new[] { "b", "b", "c" });
+
+        HashSet<string> expected = new HashSet<string> { "b", "c" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependents("a")));
+    }
+
+    /// <summary>
+    /// This tests replaces dependents and ensures old dependents are removed.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_RemovesOldDependents_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.AddDependency("a", "c");
+
+        graph.ReplaceDependents("a", new[] { "x" });
+
+        HashSet<string> expected = new HashSet<string> { "x" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependents("a")));
+    }
+
+    /// <summary>
+    /// This test replaces dependents with an empty array on a node with multiple existing dependents.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_WithEmptyArray_CountIsZero()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.AddDependency("a", "c");
+
+        graph.ReplaceDependents("a", new string[] { });
+
+        Assert.AreEqual(0, graph.GetDependents("a").Count());
+    }
+
+    /// <summary>
+    /// This test replaces dependents on a node that is not present in the graph, so the node is added.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_OnNonExistingNode_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.ReplaceDependents("x", new[] { "y", "z" });
+
+        HashSet<string> expected = new HashSet<string> { "y", "z" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependents("x")));
+    }
+
+    /// <summary>
+    /// This test makes sure that replacing dependents with a single dependent works correctly.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_WithSingleDependent_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+
+        graph.ReplaceDependents("a", new[] { "x" });
+
+        HashSet<string> expected = new HashSet<string> { "x" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependents("a")));
+    }
+
+    /// <summary>
+    /// This test replaces dependents on multiple levels of dependencies and makes sure the result is expected.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_WithMultipleLevels_CorrectlyUpdatesDependencies()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.AddDependency("b", "c");
+
+        graph.ReplaceDependents("a", new[] { "d" });
+
+        HashSet<string> expected = new HashSet<string> { "d" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependents("a")));
+        Assert.AreEqual(1, graph.GetDependents("a").Count());
+    }
+
+    /// <summary>
+    /// This test replaces dependents and ensures that dependents are correctly updated even when they are already present in other nodes.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_WithSharedDependents_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.AddDependency("c", "b");
+
+        graph.ReplaceDependents("a", new[] { "x", "y" });
+
+        HashSet<string> expectedA = new HashSet<string> { "x", "y" };
+        HashSet<string> expectedC = new HashSet<string> { "b" };
+
+        Assert.IsTrue(expectedA.SetEquals(graph.GetDependents("a")));
+        Assert.IsTrue(expectedC.SetEquals(graph.GetDependents("c")));
+    }
+
+    /// <summary>
+    /// This test replaces dependents when a dependent already exists as a dependee.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependents_WithExistingDependee_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("a", "b");
+        graph.ReplaceDependents("a", new[] { "b" });
+
+        HashSet<string> expected = new HashSet<string> { "b" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependents("a")));
+    }
+
     // --- Tests for the ReplaceDependees method ---
 
     /// <summary>
-    /// This test replaces all the dependees of a node and makes sure the method has updated its dependees.
+    /// This test replaces all the dependees of a node and ensures the method has updated its dependees.
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
@@ -540,7 +804,7 @@ public class DependencyGraphExampleStressTests
     }
 
     /// <summary>
-    /// This test replaces all the dependees of a node that previously had no dependees and makes sure the method has updated its dependees.
+    /// This test replaces all the dependees of a node that previously had no dependees and ensures the method has updated its dependees.
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
@@ -557,7 +821,7 @@ public class DependencyGraphExampleStressTests
     }
 
     /// <summary>
-    /// This takes node that previously had dependees and replaces it with no dependees and makes sure the method has updated its dependees.
+    /// This test replaces dependees for a node that previously had dependees with an empty list and ensures the method has updated its dependees.
     /// </summary>
     [TestMethod]
     [Timeout(2000)]
@@ -568,9 +832,169 @@ public class DependencyGraphExampleStressTests
         graph.AddDependency("n", "k");
         graph.ReplaceDependees("k", new string[] { });
 
-        HashSet<string> expectedDependents = new HashSet<string>();
-        HashSet<string> actualDependents = new HashSet<string>(graph.GetDependees("n"));
+        HashSet<string> expectedDependees = new HashSet<string>();
+        HashSet<string> actualDependees = new HashSet<string>(graph.GetDependees("k"));
 
-        Assert.IsTrue(expectedDependents.SetEquals(actualDependents));
+        Assert.IsTrue(expectedDependees.SetEquals(actualDependees));
+    }
+
+    /// <summary>
+    /// This test replaces dependees for multiple nodes and ensures they return the expected result.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_MultipleNodes_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+        graph.AddDependency("d", "c");
+
+        graph.ReplaceDependees("a", new[] { "x", "y" });
+        graph.ReplaceDependees("c", new[] { "z" });
+
+        HashSet<string> expectedA = new HashSet<string> { "x", "y" };
+        HashSet<string> expectedC = new HashSet<string> { "z" };
+
+        Assert.IsTrue(expectedA.SetEquals(graph.GetDependees("a")));
+        Assert.IsTrue(expectedC.SetEquals(graph.GetDependees("c")));
+    }
+
+    /// <summary>
+    /// This test replaces dependees and adds duplicate dependees; the result should have no duplicates.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_WithDuplicates_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.ReplaceDependees("a", new[] { "b", "b", "c" });
+
+        HashSet<string> expected = new HashSet<string> { "b", "c" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependees("a")));
+    }
+
+    /// <summary>
+    /// This test replaces dependees and ensures old dependees are removed.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_RemovesOldDependees_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+        graph.AddDependency("c", "a");
+
+        graph.ReplaceDependees("a", new[] { "x" });
+
+        HashSet<string> expected = new HashSet<string> { "x" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependees("a")));
+    }
+
+    /// <summary>
+    /// This test replaces dependees with an empty array on a node with multiple existing dependees.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_WithEmptyArray_CountIsZero()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+        graph.AddDependency("c", "a");
+
+        graph.ReplaceDependees("a", new string[] { });
+
+        Assert.AreEqual(0, graph.GetDependees("a").Count());
+    }
+
+    /// <summary>
+    /// This test replaces dependees on a node that is not present in the graph, so the node is added.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_OnNonExistingNode_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.ReplaceDependees("x", new[] { "y", "z" });
+
+        HashSet<string> expected = new HashSet<string> { "y", "z" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependees("x")));
+    }
+
+    /// <summary>
+    /// This test makes sure that replacing dependees with a single dependee works correctly.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_WithSingleDependee_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+
+        graph.ReplaceDependees("a", new[] { "x" });
+
+        HashSet<string> expected = new HashSet<string> { "x" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependees("a")));
+    }
+
+    /// <summary>
+    /// This test replaces dependees on multiple levels of dependencies and ensures the result is expected.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_WithMultipleLevels_CorrectlyUpdatesDependees()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+        graph.AddDependency("c", "b");
+
+        graph.ReplaceDependees("a", new[] { "d" });
+
+        HashSet<string> expected = new HashSet<string> { "d" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependees("a")));
+        Assert.AreEqual(1, graph.GetDependees("a").Count());
+    }
+
+    /// <summary>
+    /// This test replaces dependees and ensures that dependees are correctly updated even when they are already present in other nodes.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_WithSharedDependees_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+        graph.AddDependency("b", "c");
+
+        graph.ReplaceDependees("a", new[] { "x", "y" });
+
+        HashSet<string> expectedA = new HashSet<string> { "x", "y" };
+        HashSet<string> expectedC = new HashSet<string> { "b" };
+
+        Assert.IsTrue(expectedA.SetEquals(graph.GetDependees("a")));
+        Assert.IsTrue(expectedC.SetEquals(graph.GetDependees("c")));
+    }
+
+    /// <summary>
+    /// This test replaces dependees when a dependee already exists as a dependent.
+    /// </summary>
+    [TestMethod]
+    [Timeout(2000)]
+    public void ReplaceDependees_WithExistingDependent_SetEqualsIsTrue()
+    {
+        DependencyGraph graph = new DependencyGraph();
+
+        graph.AddDependency("b", "a");
+        graph.ReplaceDependees("a", new[] { "b" });
+
+        HashSet<string> expected = new HashSet<string> { "b" };
+        Assert.IsTrue(expected.SetEquals(graph.GetDependees("a")));
     }
 }
