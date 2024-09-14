@@ -18,8 +18,7 @@
 ///
 /// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
 /// did not copy it in part or whole from another source.  All
-/// references used in the completion of the assignments are cited
-/// in my README file.
+/// references used in the completion of the assignments are cited in my README file.
 ///
 /// File Contents
 /// This file implements a DependencyGraph that manages dependencies between strings
