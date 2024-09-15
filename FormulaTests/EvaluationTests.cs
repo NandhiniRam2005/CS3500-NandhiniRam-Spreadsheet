@@ -1,4 +1,4 @@
-// <copyright file="FormulaSyntaxTests.cs" company="UofU-CS3500">
+// <copyright file="EvaluationTests.cs" company="UofU-CS3500">
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 

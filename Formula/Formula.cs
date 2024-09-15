@@ -24,8 +24,10 @@
 
 namespace CS3500.Formula;
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 /// <summary>
 ///   <para>
@@ -364,7 +366,7 @@ public class Formula
     ///     Determines if two formula objects represent the same formula.
     ///   </para>
     ///   <para>
-    ///     By definition, if the parameter is null or does not reference 
+    ///     By definition, if the parameter is null or does not reference
     ///     a Formula Object then return false.
     ///   </para>
     ///   <para>
@@ -401,7 +403,7 @@ public class Formula
     ///   </remarks>
     ///   <para>
     ///     If no undefined variables or divisions by zero are encountered when evaluating
-    ///     this Formula, the numeric value of the formula is returned.  Otherwise, a 
+    ///     this Formula, the numeric value of the formula is returned.  Otherwise, a
     ///     FormulaError is returned (with a meaningful explanation as the Reason property).
     ///   </para>
     ///   <para>
@@ -418,7 +420,78 @@ public class Formula
     /// <returns> Either a double or a formula error, based on evaluating the formula.</returns>
     public object Evaluate(Lookup lookup)
     {
-        // FIXME: Implement the required algorithm here.
+        // 1.Initialize an empty stack `valueStack` for storing numbers (values).
+        // 2.Initialize an empty stack `operatorStack` for storing operators (+, -, *, /) and parentheses.
+
+        // 3.For each token in the list of tokens:
+        //    a.If the token is a number:
+        //        i.If the operator stack contains "*" or "/" at the top:
+        //            -Pop the operator from the operator stack.
+        //            - Pop the top value from the value stack(left operand).
+        //            - If the operator is "/" and the number is zero, return a division by zero error.
+        //            -Apply the operation(either multiplication or division) using the left operand and the current number.
+        //            - Push the result onto the value stack.
+        //        ii.Else:
+        //            -Push the number onto the value stack.
+        //
+        //    b.If the token is a variable:
+        //        i.Attempt to get the variable's value using the `lookup` function.
+        //            - If an error occurs(e.g., undefined variable), return an error.
+        //        ii.If the operator stack contains "*" or "/" at the top:
+        //        -Pop the operator from the operator stack.
+        //
+        //        - Pop the top value from the value stack(left operand).
+        //
+        //        - If the operator is "/" and the variable's value is zero, return a division by zero error.
+        //        - Apply the operation(either multiplication or division) using the left operand and the variable's value.
+        //        - Push the result onto the value stack.
+        //        iii.Else:
+        //            -Push the variable's value onto the value stack.
+        //
+        //    c.If the token is "+" or "-":
+        //        i.If the operator stack contains "+" or "-" at the top:
+        //        -Pop the operator from the operator stack.
+        //
+        //        - Pop the top two values from the value stack.
+        //
+        //        - Apply the operation(either addition or subtraction) using the two values.
+        //
+        //        - Push the result onto the value stack.
+        //        ii.Push the current "+" or "-" onto the operator stack.
+        //
+        //    d.If the token is "*" or "/":
+        //        -Push "*" or "/" onto the operator stack.
+        //
+        //    e.If the token is "(":
+        //        -Push the left parenthesis "(" onto the operator stack.
+        //
+        //    f.If the token is ")":
+        //        i.If the operator stack contains "+" or "-" at the top:
+        //        -Pop the operator from the operator stack.
+        //
+        //        - Pop the top two values from the value stack.
+        //
+        //        - Apply the operation(either addition or subtraction) using the two values.
+        //
+        //        - Push the result onto the value stack.
+        //        ii.Pop the left parenthesis "(" from the operator stack.
+        //        iii.If the operator stack contains "*" or "/" at the top:
+        //        -Pop the operator from the operator stack.
+        //
+        //        - Pop the top two values from the value stack.
+        //
+        //        - If the operator is "/" and the second value is zero, return a division by zero error.
+        //            -Apply the operation(either multiplication or division) using the two values.
+        //            - Push the result onto the value stack.
+        //
+        // 4.After processing all tokens:
+        //        a.If the operator stack is empty:
+        //        -Pop and return the only value in the value stack.
+        //    b.Else:
+        //        -Pop the operator from the operator stack(it should be "+" or "-").
+        //        - Pop the top two values from the value stack.
+        //        - Apply the operation(either addition or subtraction) using the two values.
+        //        - Return the result.
     }
 
     /// <summary>
@@ -431,7 +504,7 @@ public class Formula
     /// <returns> The hashcode for the object. </returns>
     public override int GetHashCode()
     {
-        // FIXME: Implement the required algorithm here.
+        return ToString().GetHashCode();
     }
 }
 
