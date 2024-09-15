@@ -35,7 +35,6 @@ public class EvaluationTests
     // --- Tests for Evaluate method ---
 
     /// <summary>
-    ///   <para>
     ///     Test addition between variables.
     ///   </para>
     /// </summary>
@@ -144,11 +143,11 @@ public class EvaluationTests
     ///   </para>
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(FormulaError))]
     public void Evaluate_WithUnknownVariable_FormulaError()
     {
         var formula = new Formula("C1 + 1");
-        formula.Evaluate(MyVariables);
+        var result = formula.Evaluate(MyVariables);
+        Assert.IsInstanceOfType(result, typeof(FormulaError));
     }
 
     /// <summary>
@@ -166,7 +165,7 @@ public class EvaluationTests
 
     /// <summary>
     ///   <para>
-    ///     Test complex formula with and parenthesis.
+    ///     Test complex formula with parentheses.
     ///   </para>
     /// </summary>
     [TestMethod]
@@ -179,15 +178,15 @@ public class EvaluationTests
 
     /// <summary>
     ///   <para>
-    ///     Test formula with division by zero, should return FormulaError.
+    ///     Test formula with division by zero, should throw FormulaError.
     ///   </para>
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(FormulaError))]
     public void Evaluate_DivisionByZero_FormulaError()
     {
         var formula = new Formula("A1 / 0");
-        formula.Evaluate(MyVariables);
+        var result = formula.Evaluate(MyVariables);
+        Assert.IsInstanceOfType(result, typeof(FormulaError));
     }
 
     /// <summary>
@@ -244,7 +243,7 @@ public class EvaluationTests
         Assert.AreNotEqual(formula1.GetHashCode(), formula2.GetHashCode());
     }
 
-    // --- Tests for GetHashCode method ---
+    // --- Tests for Equals method ---
 
     /// <summary>
     ///   <para>
@@ -295,7 +294,7 @@ public class EvaluationTests
     [TestMethod]
     public void OperatorEquals_DifferentFormulas_False()
     {
-        var formula1 = new Formula("A1 / B1");
+        var formula1 = new Formula("A1 + B1");
         var formula2 = new Formula("A1 - B1");
         Assert.IsFalse(formula1 == formula2);
     }
@@ -328,7 +327,12 @@ public class EvaluationTests
         Assert.IsTrue(formula1 != formula2);
     }
 
-    // Lookup Delegate function From Assignment Instructions
+    /// <summary>
+    /// This method is a Lookup Delegate function From Assignment Instructions.
+    /// </summary>
+    /// <param name="name">name represents the current variable.</param>
+    /// <returns> A double that the variable holds.</returns>
+    /// <exception cref="ArgumentException">Throws an argument exception when the variable is unknown.</exception>
     private double MyVariables(string name)
     {
         if (name == "A1")

@@ -420,78 +420,222 @@ public class Formula
     /// <returns> Either a double or a formula error, based on evaluating the formula.</returns>
     public object Evaluate(Lookup lookup)
     {
-        // 1.Initialize an empty stack `valueStack` for storing numbers (values).
-        // 2.Initialize an empty stack `operatorStack` for storing operators (+, -, *, /) and parentheses.
+        // Create two stacks: one for storing numbers (values) and another for operators.
+        Stack<double> valueStack = new Stack<double>();
+        Stack<string> operatorStack = new Stack<string>();
 
-        // 3.For each token in the list of tokens:
-        //    a.If the token is a number:
-        //        i.If the operator stack contains "*" or "/" at the top:
-        //            -Pop the operator from the operator stack.
-        //            - Pop the top value from the value stack(left operand).
-        //            - If the operator is "/" and the number is zero, return a division by zero error.
-        //            -Apply the operation(either multiplication or division) using the left operand and the current number.
-        //            - Push the result onto the value stack.
-        //        ii.Else:
-        //            -Push the number onto the value stack.
-        //
-        //    b.If the token is a variable:
-        //        i.Attempt to get the variable's value using the `lookup` function.
-        //            - If an error occurs(e.g., undefined variable), return an error.
-        //        ii.If the operator stack contains "*" or "/" at the top:
-        //        -Pop the operator from the operator stack.
-        //
-        //        - Pop the top value from the value stack(left operand).
-        //
-        //        - If the operator is "/" and the variable's value is zero, return a division by zero error.
-        //        - Apply the operation(either multiplication or division) using the left operand and the variable's value.
-        //        - Push the result onto the value stack.
-        //        iii.Else:
-        //            -Push the variable's value onto the value stack.
-        //
-        //    c.If the token is "+" or "-":
-        //        i.If the operator stack contains "+" or "-" at the top:
-        //        -Pop the operator from the operator stack.
-        //
-        //        - Pop the top two values from the value stack.
-        //
-        //        - Apply the operation(either addition or subtraction) using the two values.
-        //
-        //        - Push the result onto the value stack.
-        //        ii.Push the current "+" or "-" onto the operator stack.
-        //
-        //    d.If the token is "*" or "/":
-        //        -Push "*" or "/" onto the operator stack.
-        //
-        //    e.If the token is "(":
-        //        -Push the left parenthesis "(" onto the operator stack.
-        //
-        //    f.If the token is ")":
-        //        i.If the operator stack contains "+" or "-" at the top:
-        //        -Pop the operator from the operator stack.
-        //
-        //        - Pop the top two values from the value stack.
-        //
-        //        - Apply the operation(either addition or subtraction) using the two values.
-        //
-        //        - Push the result onto the value stack.
-        //        ii.Pop the left parenthesis "(" from the operator stack.
-        //        iii.If the operator stack contains "*" or "/" at the top:
-        //        -Pop the operator from the operator stack.
-        //
-        //        - Pop the top two values from the value stack.
-        //
-        //        - If the operator is "/" and the second value is zero, return a division by zero error.
-        //            -Apply the operation(either multiplication or division) using the two values.
-        //            - Push the result onto the value stack.
-        //
-        // 4.After processing all tokens:
-        //        a.If the operator stack is empty:
-        //        -Pop and return the only value in the value stack.
-        //    b.Else:
-        //        -Pop the operator from the operator stack(it should be "+" or "-").
-        //        - Pop the top two values from the value stack.
-        //        - Apply the operation(either addition or subtraction) using the two values.
-        //        - Return the result.
+        // Loop through each token in the formula.
+        foreach (string token in validatedTokens)
+        {
+            // Check if the token is a number. If so, parse it into a double.
+            if (double.TryParse(token, out double number))
+            {
+                // If the operator stack contains * or / at the top, pop the operator and the last value to apply the operation.
+                if (operatorStack.Count > 0 && (operatorStack.Peek() == "*" || operatorStack.Peek() == "/"))
+                {
+                    // Pop the operator (* or /) from the stack.
+                    string divisionOrMultiplicationOperator = operatorStack.Pop();
+
+                    // Pop the previous value from the value stack (left operand).
+                    double leftOperand = valueStack.Pop();
+
+                    // Check for division by zero.
+                    if (divisionOrMultiplicationOperator == "/" && number == 0)
+                    {
+                        // Return a FormulaError if division by zero is attempted.
+                        return new FormulaError("Cannot divide by zero.");
+                    }
+
+                    // Apply the operation (either multiplication or division) and push the result back onto the value stack.
+                    double result;
+                    if (divisionOrMultiplicationOperator == "*")
+                    {
+                        result = leftOperand * number;
+                    }
+                    else
+                    {
+                        result = leftOperand / number;
+                    }
+
+                    valueStack.Push(result);
+                }
+                else
+                {
+                    // If there's no * or / to apply, simply push the number onto the value stack.
+                    valueStack.Push(number);
+                }
+            }
+
+            // Check if the token is a variable.
+            else if (IsVar(token))
+            {
+                try
+                {
+                    // Use the lookup delegate to get the value of the variable.
+                    double variableValue = lookup(token);
+
+                    // Similar to the number handling above, check if * or / is at the top of the operator stack.
+                    if (operatorStack.Count > 0 && (operatorStack.Peek() == "*" || operatorStack.Peek() == "/"))
+                    {
+                        // Pop the operator and the last value to apply the operation.
+                        string divisionOrMultiplicationOperator = operatorStack.Pop();
+                        double leftOperand = valueStack.Pop();
+
+                        // Check for division by zero.
+                        if (divisionOrMultiplicationOperator == "/" && variableValue == 0)
+                        {
+                            return new FormulaError("Cannot divide by zero.");
+                        }
+
+                        // Apply the operation (either multiplication or division) and push the result back onto the value stack.
+                        double result;
+                        if (divisionOrMultiplicationOperator == "*")
+                        {
+                            result = leftOperand * variableValue;
+                        }
+                        else
+                        {
+                            result = leftOperand / variableValue;
+                        }
+
+                        valueStack.Push(result);
+                    }
+                    else
+                    {
+                        // If there's no * or / to apply, simply push the variable's value onto the value stack.
+                        valueStack.Push(variableValue);
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // If the lookup throws an exception (i.e., undefined variable), return a FormulaError.
+                    return new FormulaError("{token} variable is unknown or undefined.");
+                }
+            }
+
+            // Check if the token is + or -.
+            else if (token == "+" || token == "-")
+            {
+                // If the operator stack contains + or - at the top, apply the previous addition/subtraction first.
+                if (operatorStack.Count > 0 && (operatorStack.Peek() == "+" || operatorStack.Peek() == "-"))
+                {
+                    // Pop the operator and the last two values to perform the addition/subtraction.
+                    string additionOrSubtractionOperator = operatorStack.Pop();
+                    double rightOperand = valueStack.Pop();
+                    double leftOperand = valueStack.Pop();
+
+                    double result;
+                    if (additionOrSubtractionOperator == "+")
+                    {
+                        result = leftOperand + rightOperand;
+                    }
+                    else
+                    {
+                        result = leftOperand - rightOperand;
+                    }
+
+                    valueStack.Push(result);
+                }
+
+                // Push the current + or - onto the operator stack for later processing.
+                operatorStack.Push(token);
+            }
+
+            // Check if the token is * or /.
+            else if (token == "*" || token == "/")
+            {
+                // Push * or / onto the operator stack. These will be handled when the next number/variable is encountered.
+                operatorStack.Push(token);
+            }
+
+            // Check if the token is a left parenthesis "(".
+            else if (token == "(")
+            {
+                // Push the left parenthesis onto the operator stack. This marks the beginning of a sub-expression.
+                operatorStack.Push(token);
+            }
+
+            // Check if the token is a right parenthesis ")".
+            else if (token == ")")
+            {
+                // If the operator stack contains + or - at the top, perform the addition/subtraction.
+                if (operatorStack.Count > 0 && (operatorStack.Peek() == "+" || operatorStack.Peek() == "-"))
+                {
+                    string additionOrSubtractionOperator = operatorStack.Pop();
+                    double rightOperand = valueStack.Pop();
+                    double leftOperand = valueStack.Pop();
+
+                    double result;
+                    if (additionOrSubtractionOperator == "+")
+                    {
+                        result = leftOperand + rightOperand;
+                    }
+                    else
+                    {
+                        result = leftOperand - rightOperand;
+                    }
+
+                    valueStack.Push(result);
+                }
+
+                // After processing the addition/subtraction, the top of the operator stack should be a left parenthesis. Pop it.
+                if (operatorStack.Count > 0 && operatorStack.Peek() == "(")
+                {
+                    operatorStack.Pop();
+                }
+
+                // If * or / is now at the top of the operator stack, apply the multiplication/division.
+                if (operatorStack.Count > 0 && (operatorStack.Peek() == "*" || operatorStack.Peek() == "/"))
+                {
+                    string divisionOrMultiplicationOperator = operatorStack.Pop();
+                    double rightOperand = valueStack.Pop();
+                    double leftOperand = valueStack.Pop();
+
+                    // Check for division by zero.
+                    if (divisionOrMultiplicationOperator == "/" && rightOperand == 0)
+                    {
+                        return new FormulaError("Cannot divide by zero.");
+                    }
+
+                    // Apply the operation (either multiplication or division) and push the result onto the value stack.
+                    double result;
+                    if (divisionOrMultiplicationOperator == "*")
+                    {
+                        result = leftOperand * rightOperand;
+                    }
+                    else
+                    {
+                        result = leftOperand / rightOperand;
+                    }
+
+                    valueStack.Push(result);
+                }
+            }
+        }
+
+        // Final processing after all tokens have been handled.
+        if (operatorStack.Count == 0)
+        {
+            // If the operator stack is empty, there should be exactly one value in the value stack. Pop and return it.
+            return valueStack.Pop();
+        }
+        else
+        {
+            // If the operator stack is not empty, it should contain exactly one operator (+ or -) and two values in the value stack.
+            string additionOrSubtractionOperator = operatorStack.Pop();
+            double rightOperand = valueStack.Pop();
+            double leftOperand = valueStack.Pop();
+
+            // Apply the final addition or subtraction and return the result.
+            if (additionOrSubtractionOperator == "+")
+            {
+                return leftOperand + rightOperand;
+            }
+            else
+            {
+                return leftOperand - rightOperand;
+            }
+        }
     }
 
     /// <summary>
