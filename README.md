@@ -33,11 +33,18 @@ and implementing a GUI for a visual element to the Spreadsheet.
                                                                                 Debugging:        2
                                                                                 Learning tools:   2
 
-    2. Assignment 3: Dependency Graph Class       Predicted Hours:   9        Actual Hours:   10
+    3. Assignment 3: Dependency Graph Class       Predicted Hours:   9        Actual Hours:   10
 
                                                                               Hours spent -
                                                                                 Effectively:      7    
                                                                                 Debugging:        2   
                                                                                 Learning tools:   1
+
+    4. Assignment 4: Evaluating a Formula         Predicted Hours:   8        Actual Hours:   ?
+
+                                                                              Hours spent -
+                                                                                Effectively:      ?    
+                                                                                Debugging:        ?   
+                                                                                Learning tools:   ?
                                                              
                                                              
