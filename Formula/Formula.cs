@@ -326,10 +326,25 @@ public class Formula
     /// <param name="f1"> The first of two formula objects. </param>
     /// <param name="f2"> The second of two formula objects. </param>
     /// <returns> true if the two formulas are the same.</returns>
+#pragma warning disable SA1201 // Elements should appear in the correct order
     public static bool operator ==(Formula f1, Formula f2)
     {
-        // FIXME: Write this method
+        // Check if both objects are null
+        if (ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
+        {
+            return true;
+        }
+
+        // Check if one is null and the other is not
+        if (ReferenceEquals(f1, null) || ReferenceEquals(f2, null))
+        {
+            return false;
+        }
+
+        // Use the Equals method for comparison
+        return f1.Equals(f2);
     }
+#pragma warning restore SA1201 // Elements should appear in the correct order
 
     /// <summary>
     ///   <para>
@@ -341,7 +356,7 @@ public class Formula
     /// <returns> true if the two formulas are not equal to each other.</returns>
     public static bool operator !=(Formula f1, Formula f2)
     {
-        // FIXME: Write this method
+        return !(f1 == f2);
     }
 
     /// <summary>
@@ -363,8 +378,15 @@ public class Formula
     /// </returns>
     public override bool Equals(object? obj)
     {
-        // FIXME: write this method
-        return true;
+        // Check if the object is null or not of the same type
+        if (obj == null || !(obj is Formula))
+        {
+            return false;
+        }
+
+        // Compare using the canonical string representation
+        Formula formula = (Formula)obj;
+        return this.ToString() == formula.ToString();
     }
 
     /// <summary>
@@ -389,7 +411,7 @@ public class Formula
     /// <param name="lookup">
     ///   <para>
     ///     Given a variable symbol as its parameter, lookup returns the variable's (double) value
-    ///     (if it has one) or throws an ArgumentException (otherwise).  This method should expect 
+    ///     (if it has one) or throws an ArgumentException (otherwise).  This method should expect
     ///     variable names to be capitalized.
     ///   </para>
     /// </param>
@@ -428,7 +450,6 @@ public class FormulaFormatException : Exception
     public FormulaFormatException(string message)
         : base(message)
     {
-        // All this does is call the base constructor. No extra code needed.
     }
 }
 
