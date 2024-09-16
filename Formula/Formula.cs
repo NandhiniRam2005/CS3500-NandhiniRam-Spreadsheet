@@ -5,7 +5,7 @@
 /// <summary>
 /// Author:    Nandhini Ramanathan, Professor Joe, Danny, and Jim
 /// Partner:   None
-/// Date:      September 6,2024
+/// Date:      September 20,2024
 /// Course:    CS 3500, University of Utah, School of Computing
 /// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
 ///            be copied for use in Academic Coursework.
@@ -19,7 +19,8 @@
 ///    This file defines the Formula class, which represents mathematical formulas
 ///    in standard infix notation. The class is responsible for validating formulas,
 ///    extracting variables, and converting the formula into a canonical string form
-///    with different public and private helper methods.
+///    with different public and private helper methods. This file can also now evaluate
+///    validated formulas.
 /// </summary>
 
 namespace CS3500.Formula;
@@ -34,7 +35,9 @@ using System.Threading.Tasks;
 ///     This class represents formulas written in standard infix notation using standard precedence
 ///     rules.  The allowed symbols are non-negative numbers written using double-precision
 ///     floating-point syntax; variables that consist of one ore more letters followed by
-///     one or more numbers; parentheses; and the four operator symbols +, -, *, and /.
+///     one or more numbers; parentheses; and the four operator symbols +, -, *, and /. This class
+///     can also now evaluate validated formulas and returns a Formula Error object when a variable
+///     is unknown or when division by 0 occurs.
 ///   </para>
 ///   <para>
 ///     Spaces are significant only insofar that they delimit tokens.  For example, "xy" is
