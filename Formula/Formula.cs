@@ -429,99 +429,91 @@ public class Formula
         // Stack for storing operators and parentheses.
         Stack<string> operatorStack = new Stack<string>();
 
-        try
+        // Loop through each token in the validated formula.
+        foreach (string token in validatedTokens)
         {
-            // Loop through each token in the validated formula.
-            foreach (string token in validatedTokens)
+            // If the token is a number, process it.
+            if (double.TryParse(token, out double number))
             {
-                // If the token is a number, process it.
-                if (double.TryParse(token, out double number))
+                if (!ProcessValue(number, valueStack, operatorStack, out string errorMessage))
                 {
-                    if (!ProcessValue(number, valueStack, operatorStack, out string errorMessage))
-                    {
-                        return new FormulaError(errorMessage);
-                    }
-                }
-
-                // If the token is a variable, use the lookup to get its value and process it.
-                else if (IsVar(token))
-                {
-                    double variableValue;
-                    try
-                    {
-                        // Attempt to get the variable's value using the provided lookup.
-                        variableValue = lookup(token);
-                    }
-                    catch (ArgumentException)
-                    {
-                        return new FormulaError($"{token} variable is unknown or undefined.");
-                    }
-
-                    if (!ProcessValue(variableValue, valueStack, operatorStack, out string errorMessage))
-                    {
-                        return new FormulaError(errorMessage);
-                    }
-                }
-
-                // If the token is + or -, handle addition and subtraction.
-                else if (token == "+" || token == "-")
-                {
-                    ProcessPlusOrMinus(valueStack, operatorStack);
-
-                    // Push the current + or - token onto the operator stack for later processing.
-                    operatorStack.Push(token);
-                }
-
-                // If the token is * or /, push it onto the operator stack to be handled later.
-                else if (token == "*" || token == "/")
-                {
-                    operatorStack.Push(token);
-                }
-
-                // If the token is a left parenthesis, push it onto the operator stack.
-                else if (token == "(")
-                {
-                    operatorStack.Push(token);
-                }
-
-                // If the token is a right parenthesis, process the expression inside the parenthesis.
-                else if (token == ")")
-                {
-                    if (!ProcessParenthesis(valueStack, operatorStack, out string errorMessage))
-                    {
-                        return new FormulaError(errorMessage);
-                    }
+                    return new FormulaError(errorMessage);
                 }
             }
 
-            // Final processing after all tokens have been handled.
-            if (operatorStack.Count == 0)
+            // If the token is a variable, use the lookup to get its value and process it.
+            else if (IsVar(token))
             {
-                // If the operator stack is empty, there should be exactly one value in the value stack (the result).
-                return valueStack.Pop();
-            }
-            else
-            {
-                // If there is an operator left, it should be a single + or - with two values in the stack.
-                string additionOrSubtractionOperator = operatorStack.Pop();
-                double rightOperand = valueStack.Pop();
-                double leftOperand = valueStack.Pop();
-
-                // Perform the final addition or subtraction.
-                if (additionOrSubtractionOperator == "+")
+                double variableValue;
+                try
                 {
-                    return leftOperand + rightOperand;
+                    // Attempt to get the variable's value using the provided lookup.
+                    variableValue = lookup(token);
                 }
-                else
+                catch (ArgumentException)
                 {
-                    return leftOperand - rightOperand;
+                    return new FormulaError($"{token} variable is unknown or undefined.");
+                }
+
+                if (!ProcessValue(variableValue, valueStack, operatorStack, out string errorMessage))
+                {
+                    return new FormulaError(errorMessage);
+                }
+            }
+
+            // If the token is + or -, handle addition and subtraction.
+            else if (token == "+" || token == "-")
+            {
+                ProcessPlusOrMinus(valueStack, operatorStack);
+
+                // Push the current + or - token onto the operator stack for later processing.
+                operatorStack.Push(token);
+            }
+
+            // If the token is * or /, push it onto the operator stack to be handled later.
+            else if (token == "*" || token == "/")
+            {
+                operatorStack.Push(token);
+            }
+
+            // If the token is a left parenthesis, push it onto the operator stack.
+            else if (token == "(")
+            {
+                operatorStack.Push(token);
+            }
+
+            // If the token is a right parenthesis, process the expression inside the parenthesis.
+            else if (token == ")")
+            {
+                if (!ProcessParenthesis(valueStack, operatorStack, out string errorMessage))
+                {
+                    return new FormulaError(errorMessage);
                 }
             }
         }
-        catch (InvalidOperationException)
+
+        // Final processing after all tokens have been handled.
+        if (operatorStack.Count == 0)
         {
-            // Return a FormulaError if an invalid operation is encountered.
-            return new FormulaError("Cannot divide by zero.");
+            // If the operator stack is empty, there should be exactly one value in the value stack (the result).
+            return valueStack.Pop();
+        }
+        else
+        {
+            // If there is an operator left, it should be a single + or - with two values in the stack.
+            string additionOrSubtractionOperator = operatorStack.Pop();
+            double rightOperand = valueStack.Pop();
+            double leftOperand = valueStack.Pop();
+
+            // Perform the final addition or subtraction.
+            if (additionOrSubtractionOperator == "+")
+            {
+                return leftOperand + rightOperand;
+            }
+            else
+            {
+                return leftOperand - rightOperand;
+            }
         }
     }
 
@@ -630,11 +622,9 @@ public class Formula
         // If there is a + or - on top of the operator stack, apply it to the top two values.
         ProcessPlusOrMinus(valueStack, operatorStack);
 
-        // Pop the left parenthesis from the operator stack.
-        if (operatorStack.Count > 0 && operatorStack.Peek() == "(")
-        {
-            operatorStack.Pop();
-        }
+        // Pop the right parenthesis from the operator stack (We know there is a parentheses
+        // since the Evaluate method checks this token already so we don't need another check).
+        operatorStack.Pop();
 
         // If there is a * or / now at the top of the operator stack, apply it to the top two values.
         if (operatorStack.Count > 0 && (operatorStack.Peek() == "*" || operatorStack.Peek() == "/"))
