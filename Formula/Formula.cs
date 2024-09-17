@@ -64,6 +64,45 @@ public class Formula
     private readonly string canonicalFormula;
 
     /// <summary>
+    ///   <para>
+    ///     Reports whether f1 == f2, using the notion of equality from the <see cref="Equals"/> method.
+    ///   </para>
+    /// </summary>
+    /// <param name="f1"> The first of two formula objects. </param>
+    /// <param name="f2"> The second of two formula objects. </param>
+    /// <returns> true if the two formulas are the same.</returns>
+    public static bool operator ==(Formula f1, Formula f2)
+    {
+        // Check if both objects are null
+        if (ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
+        {
+            return true;
+        }
+
+        // Check if one is null and the other is not
+        if (ReferenceEquals(f1, null) || ReferenceEquals(f2, null))
+        {
+            return false;
+        }
+
+        // Use the Equals method for comparison
+        return f1.Equals(f2);
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     Reports whether f1 != f2, using the notion of equality from the <see cref="Equals"/> method.
+    ///   </para>
+    /// </summary>
+    /// <param name="f1"> The first of two formula objects. </param>
+    /// <param name="f2"> The second of two formula objects. </param>
+    /// <returns> true if the two formulas are not equal to each other.</returns>
+    public static bool operator !=(Formula f1, Formula f2)
+    {
+        return !(f1 == f2);
+    }
+
+    /// <summary>
     ///   Initializes a new instance of the <see cref="Formula"/> class.
     ///   <para>
     ///     Creates a Formula from a string that consists of an infix expression written as
@@ -164,204 +203,6 @@ public class Formula
     public override string ToString()
     {
         return this.canonicalFormula;
-    }
-
-    /// <summary>
-    ///   Reports whether "token" is a variable.  It must be one or more letters
-    ///   followed by one or more numbers.
-    /// </summary>
-    /// <param name="token"> A token that may be a variable. </param>
-    /// <returns> true if the string matches the requirements, e.g., A1 or a1. </returns>
-    private static bool IsVar(string token)
-    {
-        // notice the use of ^ and $ to denote that the entire string being matched is just the variable
-        string standaloneVarPattern = $"^{VariableRegExPattern}$";
-        return Regex.IsMatch(token, standaloneVarPattern);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Given an expression, enumerates the tokens that compose it.
-    ///   </para>
-    ///   <para>
-    ///     Tokens returned are:
-    ///   </para>
-    ///   <list type="bullet">
-    ///     <item>left paren</item>
-    ///     <item>right paren</item>
-    ///     <item>one of the four operator symbols</item>
-    ///     <item>a string consisting of one or more letters followed by one or more numbers</item>
-    ///     <item>a double literal</item>
-    ///     <item>and anything that doesn't match one of the above patterns</item>
-    ///   </list>
-    ///   <para>
-    ///     There are no empty tokens; white space is ignored (except to separate other tokens).
-    ///   </para>
-    /// </summary>
-    /// <param name="formula"> A string representing an infix formula such as 1*B1/3.0. </param>
-    /// <returns> The ordered list of tokens in the formula. </returns>
-    private static List<string> GetTokens(string formula)
-    {
-        List<string> results = new ();
-
-        string lpPattern = @"\(";
-        string rpPattern = @"\)";
-        string opPattern = @"[\+\-*/]";
-        string doublePattern = @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?";
-        string spacePattern = @"\s+";
-
-        // Overall pattern
-        string pattern = string.Format(
-                                        "({0}) | ({1}) | ({2}) | ({3}) | ({4}) | ({5})",
-                                        lpPattern,
-                                        rpPattern,
-                                        opPattern,
-                                        VariableRegExPattern,
-                                        doublePattern,
-                                        spacePattern);
-
-        // Enumerate matching tokens that don't consist solely of white space.
-        foreach (string s in Regex.Split(formula, pattern, RegexOptions.IgnorePatternWhitespace))
-        {
-            if (!Regex.IsMatch(s, @"^\s*$", RegexOptions.Singleline))
-            {
-                results.Add(s);
-            }
-        }
-
-        return results;
-    }
-
-    /// <summary>
-    /// Validates operands (variables and numbers) in the formula, whether they are expected to be placed there.
-    /// </summary>
-    /// <param name="token">The current token being processed.</param>
-    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
-    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.<</param>
-    /// <exception cref="FormulaFormatException">Exception thrown if an invalid operand is found or it should not be present in the formula based on the token beside it.</exception>
-    private void HandleOperand(string token, ref bool isNextTokenOperand, ref bool hasTokenInsideParentheses)
-    {
-        if (IsVar(token))
-        {
-            if (isNextTokenOperand)
-            {
-                this.validatedTokens.Add(token.ToUpper());
-                isNextTokenOperand = false;
-                hasTokenInsideParentheses = true;
-            }
-            else
-            {
-                throw new FormulaFormatException("Invalid or unexpected variable here where it is not expected.");
-            }
-        }
-        else if (double.TryParse(token, out double validatedNumericalValue))
-        {
-            if (isNextTokenOperand)
-            {
-                this.validatedTokens.Add(validatedNumericalValue.ToString());
-                isNextTokenOperand = false;
-                hasTokenInsideParentheses = true;
-            }
-            else
-            {
-                throw new FormulaFormatException("Invalid or unexpected number here where it is not expected.");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Validates parenthesis in the formula, ensuring there is an equal, balanced amount in the right order.
-    /// </summary>
-    /// <param name="token">The current token being processed.</param>
-    /// <param name="parenthesisCounter">Counter for the number of open and close parenthesis.</param>
-    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
-    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.</param>
-    /// <exception cref="FormulaFormatException">Exception thrown if there are mismatched,unbalanced, or empty parentheses.</exception>
-    private void HandleParenthesis(string token, ref int parenthesisCounter, ref bool isNextTokenOperand, bool hasTokenInsideParentheses)
-    {
-        if (token == "(")
-        {
-            parenthesisCounter++;
-            isNextTokenOperand = true;
-            this.validatedTokens.Add(token);
-            hasTokenInsideParentheses = false;
-        }
-        else if (token == ")")
-        {
-            parenthesisCounter--;
-            if (parenthesisCounter < 0)
-            {
-                throw new FormulaFormatException("Mismatched number of parentheses found/ parentheses are not balanced.");
-            }
-
-            if (!hasTokenInsideParentheses)
-            {
-                throw new FormulaFormatException("Empty parentheses without any valid token inside is invalid.");
-            }
-
-            this.validatedTokens.Add(token);
-            isNextTokenOperand = false;
-        }
-    }
-
-    /// <summary>
-    /// Validates operators in the formula based on the token beside it.
-    /// </summary>
-    /// <param name="token">The current token being processed.</param>
-    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
-    /// <exception cref="FormulaFormatException">Exception thrown if an unexpected operator is found.</exception>
-    private void HandleOperator(string token, ref bool isNextTokenOperand)
-    {
-        if (!isNextTokenOperand)
-        {
-            this.validatedTokens.Add(token);
-            isNextTokenOperand = true;
-        }
-        else
-        {
-            throw new FormulaFormatException("Unexpected operator present where it is not expected.");
-        }
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Reports whether f1 == f2, using the notion of equality from the <see cref="Equals"/> method.
-    ///   </para>
-    /// </summary>
-    /// <param name="f1"> The first of two formula objects. </param>
-    /// <param name="f2"> The second of two formula objects. </param>
-    /// <returns> true if the two formulas are the same.</returns>
-#pragma warning disable SA1201 // Elements should appear in the correct order
-    public static bool operator ==(Formula f1, Formula f2)
-    {
-        // Check if both objects are null
-        if (ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
-        {
-            return true;
-        }
-
-        // Check if one is null and the other is not
-        if (ReferenceEquals(f1, null) || ReferenceEquals(f2, null))
-        {
-            return false;
-        }
-
-        // Use the Equals method for comparison
-        return f1.Equals(f2);
-    }
-#pragma warning restore SA1201 // Elements should appear in the correct order
-
-    /// <summary>
-    ///   <para>
-    ///     Reports whether f1 != f2, using the notion of equality from the <see cref="Equals"/> method.
-    ///   </para>
-    /// </summary>
-    /// <param name="f1"> The first of two formula objects. </param>
-    /// <param name="f2"> The second of two formula objects. </param>
-    /// <returns> true if the two formulas are not equal to each other.</returns>
-    public static bool operator !=(Formula f1, Formula f2)
-    {
-        return !(f1 == f2);
     }
 
     /// <summary>
@@ -528,6 +369,163 @@ public class Formula
     public override int GetHashCode()
     {
         return ToString().GetHashCode();
+    }
+
+    /// <summary>
+    ///   Reports whether "token" is a variable.  It must be one or more letters
+    ///   followed by one or more numbers.
+    /// </summary>
+    /// <param name="token"> A token that may be a variable. </param>
+    /// <returns> true if the string matches the requirements, e.g., A1 or a1. </returns>
+    private static bool IsVar(string token)
+    {
+        // notice the use of ^ and $ to denote that the entire string being matched is just the variable
+        string standaloneVarPattern = $"^{VariableRegExPattern}$";
+        return Regex.IsMatch(token, standaloneVarPattern);
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     Given an expression, enumerates the tokens that compose it.
+    ///   </para>
+    ///   <para>
+    ///     Tokens returned are:
+    ///   </para>
+    ///   <list type="bullet">
+    ///     <item>left paren</item>
+    ///     <item>right paren</item>
+    ///     <item>one of the four operator symbols</item>
+    ///     <item>a string consisting of one or more letters followed by one or more numbers</item>
+    ///     <item>a double literal</item>
+    ///     <item>and anything that doesn't match one of the above patterns</item>
+    ///   </list>
+    ///   <para>
+    ///     There are no empty tokens; white space is ignored (except to separate other tokens).
+    ///   </para>
+    /// </summary>
+    /// <param name="formula"> A string representing an infix formula such as 1*B1/3.0. </param>
+    /// <returns> The ordered list of tokens in the formula. </returns>
+    private static List<string> GetTokens(string formula)
+    {
+        List<string> results = new ();
+
+        string lpPattern = @"\(";
+        string rpPattern = @"\)";
+        string opPattern = @"[\+\-*/]";
+        string doublePattern = @"(?: \d+\.\d* | \d*\.\d+ | \d+ ) (?: [eE][\+-]?\d+)?";
+        string spacePattern = @"\s+";
+
+        // Overall pattern
+        string pattern = string.Format(
+                                        "({0}) | ({1}) | ({2}) | ({3}) | ({4}) | ({5})",
+                                        lpPattern,
+                                        rpPattern,
+                                        opPattern,
+                                        VariableRegExPattern,
+                                        doublePattern,
+                                        spacePattern);
+
+        // Enumerate matching tokens that don't consist solely of white space.
+        foreach (string s in Regex.Split(formula, pattern, RegexOptions.IgnorePatternWhitespace))
+        {
+            if (!Regex.IsMatch(s, @"^\s*$", RegexOptions.Singleline))
+            {
+                results.Add(s);
+            }
+        }
+
+        return results;
+    }
+
+    /// <summary>
+    /// Validates operands (variables and numbers) in the formula, whether they are expected to be placed there.
+    /// </summary>
+    /// <param name="token">The current token being processed.</param>
+    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
+    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.<</param>
+    /// <exception cref="FormulaFormatException">Exception thrown if an invalid operand is found or it should not be present in the formula based on the token beside it.</exception>
+    private void HandleOperand(string token, ref bool isNextTokenOperand, ref bool hasTokenInsideParentheses)
+    {
+        if (IsVar(token))
+        {
+            if (isNextTokenOperand)
+            {
+                this.validatedTokens.Add(token.ToUpper());
+                isNextTokenOperand = false;
+                hasTokenInsideParentheses = true;
+            }
+            else
+            {
+                throw new FormulaFormatException("Invalid or unexpected variable here where it is not expected.");
+            }
+        }
+        else if (double.TryParse(token, out double validatedNumericalValue))
+        {
+            if (isNextTokenOperand)
+            {
+                this.validatedTokens.Add(validatedNumericalValue.ToString());
+                isNextTokenOperand = false;
+                hasTokenInsideParentheses = true;
+            }
+            else
+            {
+                throw new FormulaFormatException("Invalid or unexpected number here where it is not expected.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Validates parenthesis in the formula, ensuring there is an equal, balanced amount in the right order.
+    /// </summary>
+    /// <param name="token">The current token being processed.</param>
+    /// <param name="parenthesisCounter">Counter for the number of open and close parenthesis.</param>
+    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
+    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.</param>
+    /// <exception cref="FormulaFormatException">Exception thrown if there are mismatched,unbalanced, or empty parentheses.</exception>
+    private void HandleParenthesis(string token, ref int parenthesisCounter, ref bool isNextTokenOperand, bool hasTokenInsideParentheses)
+    {
+        if (token == "(")
+        {
+            parenthesisCounter++;
+            isNextTokenOperand = true;
+            this.validatedTokens.Add(token);
+            hasTokenInsideParentheses = false;
+        }
+        else if (token == ")")
+        {
+            parenthesisCounter--;
+            if (parenthesisCounter < 0)
+            {
+                throw new FormulaFormatException("Mismatched number of parentheses found/ parentheses are not balanced.");
+            }
+
+            if (!hasTokenInsideParentheses)
+            {
+                throw new FormulaFormatException("Empty parentheses without any valid token inside is invalid.");
+            }
+
+            this.validatedTokens.Add(token);
+            isNextTokenOperand = false;
+        }
+    }
+
+    /// <summary>
+    /// Validates operators in the formula based on the token beside it.
+    /// </summary>
+    /// <param name="token">The current token being processed.</param>
+    /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
+    /// <exception cref="FormulaFormatException">Exception thrown if an unexpected operator is found.</exception>
+    private void HandleOperator(string token, ref bool isNextTokenOperand)
+    {
+        if (!isNextTokenOperand)
+        {
+            this.validatedTokens.Add(token);
+            isNextTokenOperand = true;
+        }
+        else
+        {
+            throw new FormulaFormatException("Unexpected operator present where it is not expected.");
+        }
     }
 
     /// <summary>
