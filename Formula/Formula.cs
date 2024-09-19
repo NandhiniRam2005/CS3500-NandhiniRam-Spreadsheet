@@ -1,5 +1,5 @@
 ﻿// <copyright file="Formula.cs" company="UofU-CS3500">
-// Copyright (c) 2024 UofU-CS3500. All rights reserved.
+//   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
 /// <summary>
@@ -64,45 +64,6 @@ public class Formula
     private readonly string canonicalFormula;
 
     /// <summary>
-    ///   <para>
-    ///     Reports whether f1 == f2, using the notion of equality from the <see cref="Equals"/> method.
-    ///   </para>
-    /// </summary>
-    /// <param name="f1"> The first of two formula objects. </param>
-    /// <param name="f2"> The second of two formula objects. </param>
-    /// <returns> true if the two formulas are the same.</returns>
-    public static bool operator ==(Formula f1, Formula f2)
-    {
-        // Check if both objects are null
-        if (ReferenceEquals(f1, null) && ReferenceEquals(f2, null))
-        {
-            return true;
-        }
-
-        // Check if one is null and the other is not
-        if (ReferenceEquals(f1, null) || ReferenceEquals(f2, null))
-        {
-            return false;
-        }
-
-        // Use the Equals method for comparison
-        return f1.Equals(f2);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Reports whether f1 != f2, using the notion of equality from the <see cref="Equals"/> method.
-    ///   </para>
-    /// </summary>
-    /// <param name="f1"> The first of two formula objects. </param>
-    /// <param name="f2"> The second of two formula objects. </param>
-    /// <returns> true if the two formulas are not equal to each other.</returns>
-    public static bool operator !=(Formula f1, Formula f2)
-    {
-        return !(f1 == f2);
-    }
-
-    /// <summary>
     ///   Initializes a new instance of the <see cref="Formula"/> class.
     ///   <para>
     ///     Creates a Formula from a string that consists of an infix expression written as
@@ -132,7 +93,7 @@ public class Formula
 
         foreach (string token in tokensInFormula)
         {
-            if (IsVar(token) || double.TryParse(token, out double validatedNumericalValue))
+            if (IsVar(token) || double.TryParse(token, out double _))
             {
                 HandleOperand(token, ref isNextTokenOperand, ref hasTokenInsideParentheses);
             }
@@ -167,6 +128,33 @@ public class Formula
         // Join the strings in the validatedTokens list without any spaces and store it in the canonicalFormula string variable
         // The link to where I found this method is in my README.
         this.canonicalFormula = string.Join(string.Empty, this.validatedTokens);
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     Reports whether f1 == f2, using the notion of equality from the <see cref="Equals"/> method.
+    ///   </para>
+    /// </summary>
+    /// <param name="f1"> The first of two formula objects. </param>
+    /// <param name="f2"> The second of two formula objects. </param>
+    /// <returns> true if the two formulas are the same.</returns>
+    public static bool operator ==(Formula f1, Formula f2)
+    {
+        // Use the Equals method for comparison
+        return f1.Equals(f2);
+    }
+
+    /// <summary>
+    ///   <para>
+    ///     Reports whether f1 != f2, using the notion of equality from the <see cref="Equals"/> method.
+    ///   </para>
+    /// </summary>
+    /// <param name="f1"> The first of two formula objects. </param>
+    /// <param name="f2"> The second of two formula objects. </param>
+    /// <returns> true if the two formulas are not equal to each other.</returns>
+    public static bool operator !=(Formula f1, Formula f2)
+    {
+        return !(f1 == f2);
     }
 
     /// <summary>

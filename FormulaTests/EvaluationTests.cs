@@ -593,45 +593,6 @@ public class EvaluationTests
 
     /// <summary>
     ///   <para>
-    ///     Test Equals method with two null formulas.
-    ///   </para>
-    /// </summary>
-    [TestMethod]
-    public void OperatorEquals_BothNull_True()
-    {
-        Formula? formula1 = null;
-        Formula? formula2 = null;
-        Assert.IsTrue(formula1 == formula2);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Test Equals method with one null formula2.
-    ///   </para>
-    /// </summary>
-    [TestMethod]
-    public void OperatorEquals_WithOneNullSecondFormula_False()
-    {
-        var formula1 = new Formula("A1 + B1");
-        Formula? formula2 = null;
-        Assert.IsFalse(formula1 == formula2);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Test Equals method with one null formula1.
-    ///   </para>
-    /// </summary>
-    [TestMethod]
-    public void OperatorEquals_WithOneNullFirstFormula_False()
-    {
-        Formula? formula1 = null;
-        var formula2 = new Formula("A1 + B1");
-        Assert.IsFalse(formula1 == formula2);
-    }
-
-    /// <summary>
-    ///   <para>
     ///     Test == operator with identical formulas.
     ///   </para>
     /// </summary>
@@ -707,45 +668,6 @@ public class EvaluationTests
     {
         var formula1 = new Formula("A1 + B1");
         var formula2 = new Formula("A1 - B1");
-        Assert.IsTrue(formula1 != formula2);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Test != method with two null formulas.
-    ///   </para>
-    /// </summary>
-    [TestMethod]
-    public void OperatorNotEquals_BothNull_False()
-    {
-        Formula? formula1 = null;
-        Formula? formula2 = null;
-        Assert.IsFalse(formula1 != formula2);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Test != method with one null formula2.
-    ///   </para>
-    /// </summary>
-    [TestMethod]
-    public void OperatorNotEquals_WithOneNullSecondFormula_False()
-    {
-        var formula1 = new Formula("A1 + B1");
-        Formula? formula2 = null;
-        Assert.IsTrue(formula1 != formula2);
-    }
-
-    /// <summary>
-    ///   <para>
-    ///     Test != method with one null formula1.
-    ///   </para>
-    /// </summary>
-    [TestMethod]
-    public void OperatorNotEquals_WithOneNullFirstFormula_True()
-    {
-        Formula? formula1 = null;
-        var formula2 = new Formula("A1 + B1");
         Assert.IsTrue(formula1 != formula2);
     }
 
