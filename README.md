@@ -27,6 +27,22 @@ the Equals method have been implemented in the Formula class to define Equality 
 Future extensions include using the hashcode method that was implemented meaningfully and the dependency graph 
 to look up variables and implementing a GUI for a visual element to the Spreadsheet.
 
+# Examples of Good Software Practices (GSP)
+
+List three main - write no more than one paragraph describing it in my code, with the others just write a bulleted list.
+Examples are :
+
+FROM THE ASSIGNMNET INSTRUCTIONS: (CHANGE LATER!!!)
+
+DRY - do not repeat yourself, i.e., repeated code should be turned into helper methods.
+Self-documenting code - the names of your methods and variables should explain what they do.
+Complexity management - complex algorithms should be broken down into well-named (and commented) smaller helper methods.  Individual lines of complex code should be  documented.
+XML Documentation - all classes, methods, properties, and files should have appropriate header comments.
+Reuse - Functionality that is already available either by C# libraries or your own libraries should be used rather than re-written.
+Style - You should obey the style guidelines in the: .editorconfig file.  Warnings should be turned to errors to help you with this.
+Versioning - You should have multiple commits to your GitHub with meaningful/informative commit messages.
+Testing - Your test suite should be comprehensive, well named and documented, and show the TAs that you have taken it seriously.
+
 # Time Expenditures:
 
     1. Assignment 1: Test Driven Development      Predicted Hours:   4        Actual Hours:   5
@@ -50,5 +66,12 @@ to look up variables and implementing a GUI for a visual element to the Spreadsh
                                                                                 Effectively:      8    
                                                                                 Debugging:        2   
                                                                                 Learning tools:   1
+
+    5. Assignment 5: Onward to a Spreadsheet      Predicted Hours:   7        Actual Hours:   ?
+
+                                                                              Hours spent -
+                                                                                Effectively:      ?    
+                                                                                Debugging:        ?   
+                                                                                Learning tools:   ?
                                                              
                                                              
