@@ -182,7 +182,11 @@ public class Spreadsheet
     /// </returns>
     public IList<string> SetCellContents(string name, double number)
     {
-        throw new NotImplementedException();
+        ValidateCellName(name);
+        cellContents[name] = number;
+
+        // Update dependencies and return affected cells.
+        return GetAffectedCells(name);
     }
 
     /// <summary>
@@ -199,7 +203,11 @@ public class Spreadsheet
     /// </returns>
     public IList<string> SetCellContents(string name, string text)
     {
-        throw new NotImplementedException();
+        ValidateCellName(name);
+        cellContents[name] = text;
+
+        // Update dependencies and return affected cells.
+        return GetAffectedCells(name);
     }
 
     /// <summary>
@@ -274,6 +282,35 @@ public class Spreadsheet
         {
             throw new InvalidNameException();
         }
+    }
+
+    /// <summary>
+    /// Get a list of cells affected by the change in the specified cell.
+    /// </summary>
+    /// <param name="name">The name of the changed cell.</param>
+    /// <returns>An ordered list of cell names that need recalculation.</returns>
+    private IList<string> GetAffectedCells(string name)
+    {
+        // Create a list to hold all affected cells.
+        List<string> affectedCells = new List<string>();
+
+        // Get the direct dependents of the given cell.
+        IEnumerable<string> dependents = GetDirectDependents(name);
+
+        // Iterate over each dependent cell.
+        foreach (var dependent in dependents)
+        {
+            // Add the dependent to the affected cells list.
+            affectedCells.Add(dependent);
+
+            // Recursively call this method to get all affected cells of the current dependent.
+            foreach (var affectedCell in GetAffectedCells(dependent))
+            {
+                affectedCells.Add(affectedCell);
+            }
+        }
+
+        return affectedCells;
     }
 
     /// <summary>
