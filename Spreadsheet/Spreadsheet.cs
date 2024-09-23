@@ -98,6 +98,7 @@ public class Spreadsheet
     {
         // Initialize the dictionary to store cell contents.
         cellContents = new Dictionary<string, object>();
+
         // Initialize the DependencyGraph instance.
         dependencyGraph = new DependencyGraph();
     }
@@ -114,7 +115,7 @@ public class Spreadsheet
         HashSet<string> nonEmptyCells = new HashSet<string>();
         foreach (var entry in cellContents)
         {
-            if (!string.IsNullOrEmpty(entry.Value?.ToString()))
+            if (!string.IsNullOrEmpty(entry.Value.ToString()))
             {
                 nonEmptyCells.Add(entry.Key);
             }
@@ -137,7 +138,19 @@ public class Spreadsheet
     /// </returns>
     public object GetCellContents(string name)
     {
-        throw new NotImplementedException();
+        if (!IsValidCellName(name))
+        {
+            throw new InvalidNameException();
+        }
+
+        if (cellContents.ContainsKey(name))
+        {
+            return cellContents[name];
+        }
+        else
+        {
+            return string.Empty;
+        }
     }
 
     /// <summary>
@@ -236,6 +249,31 @@ public class Spreadsheet
     private IEnumerable<string> GetDirectDependents(string name)
     {
         throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Checks if the given cell name is valid based on the specified criteria.
+    /// </summary>
+    /// <param name="name">The cell name to check.</param>
+    /// <returns>True if valid, otherwise false.</returns>
+    private bool IsValidCellName(string name)
+    {
+        // A valid name consists of one or more letters followed by one or more numbers.
+        // This can be improved with a regex if needed.
+        return !string.IsNullOrEmpty(name) && char.IsLetter(name[0]);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="name"></param>
+    /// <exception cref="InvalidNameException"></exception>
+    private void ValidateCellName(string name)
+    {
+        if (!IsValidCellName(name))
+        {
+            throw new InvalidNameException();
+        }
     }
 
     /// <summary>
