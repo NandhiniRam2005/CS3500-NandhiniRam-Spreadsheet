@@ -25,7 +25,7 @@
 /// in a directed graph.
 /// </summary>
 
-namespace CS3500.DependencyGraph;
+namespace CS3500;
 
 /// <summary>
 ///   <para>

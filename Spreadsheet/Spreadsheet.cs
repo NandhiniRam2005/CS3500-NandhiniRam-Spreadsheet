@@ -84,7 +84,23 @@ public class InvalidNameException : Exception
 /// </summary>
 public class Spreadsheet
 {
+    // A dictionary to hold cell contents by their names.
+    private readonly Dictionary<string, object> cellContents;
 
+    // An instance of the DependencyGraph to manage cell dependencies.
+    private readonly DependencyGraph dependencyGraph;
+
+    /// <summary>
+    /// Initializes a new instance of the Spreadsheet class.
+    /// Sets up the dictionary for cell contents and initializes the DependencyGraph.
+    /// </summary>
+    public Spreadsheet()
+    {
+        // Initialize the dictionary to store cell contents.
+        cellContents = new Dictionary<string, object>();
+        // Initialize the DependencyGraph instance.
+        dependencyGraph = new DependencyGraph();
+    }
 
     /// <summary>
     ///   Provides a copy of the names of all of the cells in the spreadsheet
@@ -95,7 +111,15 @@ public class Spreadsheet
     /// </returns>
     public ISet<string> GetNamesOfAllNonemptyCells()
     {
-        throw new NotImplementedException();
+        HashSet<string> nonEmptyCells = new HashSet<string>();
+        foreach (var entry in cellContents)
+        {
+            if (!string.IsNullOrEmpty(entry.Value?.ToString()))
+            {
+                nonEmptyCells.Add(entry.Key);
+            }
+        }
+        return nonEmptyCells;
     }
 
     /// <summary>

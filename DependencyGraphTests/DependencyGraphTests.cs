@@ -21,7 +21,7 @@
 
 namespace CS3500.DevelopmentTests;
 
-using CS3500.DependencyGraph;
+using CS3500;
 
 /// <summary>
 /// This is a test class for DependencyGraphTest and is intended
