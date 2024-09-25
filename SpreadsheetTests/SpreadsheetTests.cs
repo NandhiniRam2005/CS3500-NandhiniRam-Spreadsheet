@@ -114,6 +114,112 @@ namespace SpreadsheetTests
             spreadsheet.SetCellContents("1A", "Invalid");
         }
 
+        /// <summary>
+        ///     Tests adding multiple cells and retrieving their contents.
+        /// </summary>
+        [TestMethod]
+        public void SetMultipleCellContents_GetCellContents_ReturnsAllValues()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 10.0);
+            spreadsheet.SetCellContents("B1", "Hello");
+            spreadsheet.SetCellContents("C1", new Formula("A1 + 5"));
+
+            Assert.AreEqual(10.0, spreadsheet.GetCellContents("A1"));
+            Assert.AreEqual("Hello", spreadsheet.GetCellContents("B1"));
+            Assert.AreEqual(new Formula("A1 + 5"), spreadsheet.GetCellContents("C1"));
+        }
+
+        /// <summary>
+        ///     Tests setting a cell with a complex formula and retrieving its value.
+        /// </summary>
+        [TestMethod]
+        public void SetCellContents_ComplexFormula_GetCellContents_ReturnsFormula()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 10.0);
+            spreadsheet.SetCellContents("B1", new Formula("A1 * 2 + 3"));
+
+            Assert.AreEqual(new Formula("A1 * 2 + 3"), spreadsheet.GetCellContents("B1"));
+        }
+
+        /// <summary>
+        ///     Tests setting a cell with a formula that references multiple cells.
+        /// </summary>
+        [TestMethod]
+        public void SetCellContents_MultipleCellReferences_Formula()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 5.0);
+            spreadsheet.SetCellContents("B1", 10.0);
+            spreadsheet.SetCellContents("C1", new Formula("A1 + B1"));
+
+            Assert.AreEqual(new Formula("A1 + B1"), spreadsheet.GetCellContents("C1"));
+        }
+
+        /// <summary>
+        ///     Tests setting a cell with a formula that references a non-existent cell.
+        /// </summary>
+        [TestMethod]
+        public void SetCellContents_ReferenceToNonExistentCell_Formula()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", new Formula("B1 + 1"));
+
+            Assert.AreEqual(new Formula("B1 + 1"), spreadsheet.GetCellContents("A1"));
+        }
+
+        /// <summary>
+        ///     Tests clearing a non-existent cell.
+        /// </summary>
+        [TestMethod]
+        public void SetCellContents_NonExistentCell_Clear_NoException()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("C1", string.Empty);
+
+            Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("C1"));
+        }
+
+        /// <summary>
+        ///     Tests setting a cell with a formula referencing itself indirectly through another cell throws circular exception.
+        /// </summary>
+        [TestMethod]
+        [ExpectedException(typeof(CircularException))]
+        public void SetCellContents_IndirectSelfReference_CircularException()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", new Formula("B1 + 1"));
+            spreadsheet.SetCellContents("B1", new Formula("A1 + 1"));
+
+            Assert.IsNotNull(spreadsheet.GetCellContents("A1"));
+            Assert.IsNotNull(spreadsheet.GetCellContents("B1"));
+        }
+
+        /// <summary>
+        ///     Tests setting a formula that indirectly references itself, verifying circular dependency detection.
+        /// </summary>
+        [TestMethod]
+        [ExpectedException(typeof(CircularException))]
+        public void SetCellContents_IndirectCircularDependency_ThrowsException()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", new Formula("B1 + 1"));
+            spreadsheet.SetCellContents("B1", new Formula("C1 + 1"));
+            spreadsheet.SetCellContents("C1", new Formula("A1 + 1"));
+        }
+
+        /// <summary>
+        ///     Tests setting a formula that directly references itself, verifying circular dependency detection.
+        /// </summary>
+        [TestMethod]
+        [ExpectedException(typeof(CircularException))]
+        public void SetCellContents_DirectSelfReference_ThrowsException()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", new Formula("A1 + 1"));
+        }
+
         // --- Tests for GetNamesOfAllNonemptyCells method ---
 
         /// <summary>
@@ -130,6 +236,39 @@ namespace SpreadsheetTests
             Assert.IsTrue(nonEmptyCells.Contains("A1"));
             Assert.IsTrue(nonEmptyCells.Contains("A2"));
             Assert.AreEqual(2, nonEmptyCells.Count);
+        }
+
+        /// <summary>
+        ///     Tests getting names of all non-empty cells after some have been cleared.
+        /// </summary>
+        [TestMethod]
+        public void GetNamesOfAllNonemptyCells_AfterClearing_ReturnsUpdatedList()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 10.0);
+            spreadsheet.SetCellContents("A2", "Hello");
+            spreadsheet.SetCellContents("A1", string.Empty); // Clear A1
+            var nonEmptyCells = spreadsheet.GetNamesOfAllNonemptyCells();
+
+            Assert.IsFalse(nonEmptyCells.Contains("A1"));
+            Assert.IsTrue(nonEmptyCells.Contains("A2"));
+            Assert.AreEqual(1, nonEmptyCells.Count);
+        }
+
+        /// <summary>
+        ///     Tests that clearing all cells results in no non-empty cells.
+        /// </summary>
+        [TestMethod]
+        public void GetNamesOfAllNonemptyCells_GetNamesOfAllNonemptyCells_ReturnsEmptyList()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 10.0);
+            spreadsheet.SetCellContents("A2", "Text");
+            spreadsheet.SetCellContents("A1", string.Empty);
+            spreadsheet.SetCellContents("A2", string.Empty);
+
+            var nonEmptyCells = spreadsheet.GetNamesOfAllNonemptyCells();
+            Assert.AreEqual(0, nonEmptyCells.Count);
         }
 
         // --- Tests for GetCellContents method ---
@@ -154,6 +293,38 @@ namespace SpreadsheetTests
             var spreadsheet = new Spreadsheet();
 
             Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("C1"));
+        }
+
+        /// <summary>
+        ///     Tests retrieving a cell's value after a formula is updated.
+        /// </summary>
+        [TestMethod]
+        public void GetCellContents_GetValue_ReturnsUpdatedResult()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 2.0);
+            spreadsheet.SetCellContents("B1", new Formula("A1 * 2"));
+            spreadsheet.SetCellContents("A1", 5.0);
+
+            Assert.AreEqual(new Formula("A1 * 2"), spreadsheet.GetCellContents("B1"));
+        }
+
+        /// <summary>
+        ///     Tests a mix of different cell contents.
+        /// </summary>
+        [TestMethod]
+        public void MixedCellContents_GetCellContents_ReturnsAllValues()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", 10.0);
+            spreadsheet.SetCellContents("B1", "Text");
+            spreadsheet.SetCellContents("C1", new Formula("A1 + 5"));
+            spreadsheet.SetCellContents("D1", string.Empty);
+
+            Assert.AreEqual(10.0, spreadsheet.GetCellContents("A1"));
+            Assert.AreEqual("Text", spreadsheet.GetCellContents("B1"));
+            Assert.AreEqual(new Formula("A1 + 5"), spreadsheet.GetCellContents("C1"));
+            Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("D1"));
         }
     }
 }
