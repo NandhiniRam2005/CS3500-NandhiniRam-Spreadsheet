@@ -69,7 +69,7 @@ public class InvalidNameException : Exception
 /// </summary>
 public class Spreadsheet
 {
-    // A dictionary to hold cell contents by their names.
+    // A dictionary to hold cell contents by its names.
     private readonly Dictionary<string, object> cellContents;
 
     // An instance of the DependencyGraph to manage cell dependencies.

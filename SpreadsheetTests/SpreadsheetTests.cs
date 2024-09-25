@@ -100,7 +100,7 @@ namespace SpreadsheetTests
         {
             var spreadsheet = new Spreadsheet();
             spreadsheet.SetCellContents("A1", new Formula("B1"));
-            spreadsheet.SetCellContents("B1", new Formula("A1")); // This should throw CircularException
+            spreadsheet.SetCellContents("B1", new Formula("A1"));
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace SpreadsheetTests
         public void SetCellContents_InvalidCellName_ThrowsException()
         {
             var spreadsheet = new Spreadsheet();
-            spreadsheet.SetCellContents("1A", "Invalid"); // Invalid name should throw exception
+            spreadsheet.SetCellContents("1A", "Invalid");
         }
 
         // --- Tests for GetNamesOfAllNonemptyCells method ---
@@ -142,7 +142,7 @@ namespace SpreadsheetTests
         public void GetCellContents_InvalidCellName_ThrowsException()
         {
             var spreadsheet = new Spreadsheet();
-            spreadsheet.GetCellContents(string.Empty); // Empty name should throw InvalidNameException
+            spreadsheet.GetCellContents(string.Empty);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace SpreadsheetTests
         {
             var spreadsheet = new Spreadsheet();
 
-            Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("C1")); // Should return empty string
+            Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("C1"));
         }
     }
 }
