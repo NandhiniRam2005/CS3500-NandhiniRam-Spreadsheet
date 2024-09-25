@@ -5,7 +5,7 @@ Start Date: 30-Aug-2024
 Course:     CS 3505, University of Utah, School of Computing
 GitHub ID:  NandhiniRam2005
 Repo:       https://github.com/uofu-cs3500-20-fall2024/spreadsheet-NandhiniRam2005
-Commit Date: 20-Sep-2024 9:20pm
+Commit Date: 27-Sep-2024 9:20pm
 Solution:   Spreadsheet
 Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for use in Academic Coursework.
 ```
@@ -24,24 +24,40 @@ The program has been extended to include the implementation of evaluating formul
 formula (tokens validated in constructor) and mathematically evaluates them. The == and != operators, and 
 the Equals method have been implemented in the Formula class to define Equality between Formula objects.
 
-Future extensions include using the hashcode method that was implemented meaningfully and the dependency graph 
-to look up variables and implementing a GUI for a visual element to the Spreadsheet.
+A Spreadsheet class has been added to store cell contents, managing dependencies between cells, and 
+ensuring there are no circular dependencies. It incorporated the Formula and DependencyGraph class together 
+to accomplish this.
+
+Future extensions include implementing a GUI for a visual element to the Spreadsheet.
 
 # Examples of Good Software Practices (GSP)
 
-List three main - write no more than one paragraph describing it in my code, with the others just write a bulleted list.
-Examples are :
+1. DRY (Don't Repeat Yourself)
 
-FROM THE ASSIGNMNET INSTRUCTIONS: (CHANGE LATER!!!)
+In the Spreadsheet implementation, I utilized helper methods to encapsulate repeated logic, such as to set cell contents
+and dependency management to check for a circular exception. This not only simplifies the code to make it more readable 
+but also enhances maintainability, as changes can be made in one place without affecting multiple code sections.
 
-DRY - do not repeat yourself, i.e., repeated code should be turned into helper methods.
-Self-documenting code - the names of your methods and variables should explain what they do.
-Complexity management - complex algorithms should be broken down into well-named (and commented) smaller helper methods.  Individual lines of complex code should be  documented.
-XML Documentation - all classes, methods, properties, and files should have appropriate header comments.
-Reuse - Functionality that is already available either by C# libraries or your own libraries should be used rather than re-written.
-Style - You should obey the style guidelines in the: .editorconfig file.  Warnings should be turned to errors to help you with this.
-Versioning - You should have multiple commits to your GitHub with meaningful/informative commit messages.
-Testing - Your test suite should be comprehensive, well named and documented, and show the TAs that you have taken it seriously.
+2. Separation of Concerns
+
+Each class in the solution has a well-defined responsibility. The Formula class handles formula construction and validation, 
+while the DependencyGraph class manages cell dependencies. This separation allows for easier testing and debugging, as each 
+component can be modified independently.
+
+3. Well-Named and Documented Methods
+
+Throughout my code, I have prioritized using descriptive names for methods and variables. For example, methods like 
+HasCircularDependencyHelper and SetCellContentsHelper clearly communicate their purpose, making the code more intuitive. Additionally, 
+I have included XML documentation comments for all classes and methods to provide further clarity on their functionality.
+
+Other Good Software Practices Achieved:
+
+- Complexity management through breaking down complex algorithms into smaller, well-named helper methods like the Evaluate method, 
+  Formula constructor, and the set cell contents method in the Spreadsheet class.
+- Code reuse by utilizing existing C# libraries and avoiding redundant implementations like the Dictionary and reusing my DependencyGraph 
+  class for my Spreadsheet class.
+- Adherence to style guidelines as defined in the .editorconfig and stylecop file by making sure there are no more warnings.
+- Versioning with meaningful commit messages to track changes effectively when starting a new assignment.
 
 # Time Expenditures:
 
@@ -67,11 +83,11 @@ Testing - Your test suite should be comprehensive, well named and documented, an
                                                                                 Debugging:        2   
                                                                                 Learning tools:   1
 
-    5. Assignment 5: Onward to a Spreadsheet      Predicted Hours:   7        Actual Hours:   ?
+    5. Assignment 5: Onward to a Spreadsheet      Predicted Hours:   7        Actual Hours:   8
 
                                                                               Hours spent -
-                                                                                Effectively:      ?    
-                                                                                Debugging:        ?   
-                                                                                Learning tools:   ?
+                                                                                Effectively:      6    
+                                                                                Debugging:        1   
+                                                                                Learning tools:   1
                                                              
                                                              

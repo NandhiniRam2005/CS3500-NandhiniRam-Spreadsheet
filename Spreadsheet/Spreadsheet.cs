@@ -376,7 +376,10 @@ public class Spreadsheet
         // Initialize a hash set to track visited cells and prevent infinite loops.
         HashSet<string> visited = [];
 
+        // Start the depth-first search to visit all dependent cells.
         Visit(name, name, visited, changed);
+
+        // Return the list of cells that need to be recalculated, in the correct order.
         return changed;
     }
 
