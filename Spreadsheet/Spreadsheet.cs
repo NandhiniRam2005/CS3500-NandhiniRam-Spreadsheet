@@ -70,7 +70,7 @@ public class InvalidNameException : Exception
 public class Spreadsheet
 {
     // A dictionary to hold cell contents by its names.
-    private readonly Dictionary<string, object> cellContents;
+    private readonly Dictionary<string, Cell> cellContents;
 
     // An instance of the DependencyGraph to manage cell dependencies.
     private readonly DependencyGraph dependencyGraph;
@@ -81,7 +81,7 @@ public class Spreadsheet
     /// </summary>
     public Spreadsheet()
     {
-        cellContents = new Dictionary<string, object>();
+        cellContents = new Dictionary<string, Cell>();
         dependencyGraph = new DependencyGraph();
     }
 
@@ -98,7 +98,7 @@ public class Spreadsheet
 
         foreach (var entry in cellContents)
         {
-            if (!string.IsNullOrEmpty(entry.Value.ToString()))
+            if (!string.IsNullOrEmpty(entry.Value.Contents.ToString()))
             {
                 nonEmptyCells.Add(entry.Key);
             }
@@ -127,7 +127,7 @@ public class Spreadsheet
 
         if (cellContents.ContainsKey(name))
         {
-            return cellContents[name];
+            return cellContents[name].Contents;
         }
         else
         {
@@ -255,24 +255,13 @@ public class Spreadsheet
         // Loop through variables in the formula
         foreach (var variable in formula.GetVariables())
         {
-            // If the variable is already visited, we have a circular dependency
-            if (visited.Contains(variable))
-            {
-                return true;
-            }
-
             // Add the current variable to the visited set
             visited.Add(variable);
 
-            // Recursively check dependents for circular dependencies
+            // Check dependents for circular dependencies
             foreach (var dependent in GetDirectDependents(variable))
             {
                 if (dependent == name)
-                {
-                    return true;
-                }
-
-                if (HasCircularDependencyHelper(dependent, formula, visited))
                 {
                     return true;
                 }
@@ -309,10 +298,10 @@ public class Spreadsheet
         // Store the original contents of the cell in case we need to revert to it
         object originalContent;
 
-        // Check if the cell already has content and store it, or set it to an empty string
+        // Check if the cell already exists, and store its current contents, or set it to an empty string if it doesn't exist
         if (cellContents.ContainsKey(name))
         {
-            originalContent = cellContents[name];
+            originalContent = cellContents[name].Contents;
         }
         else
         {
@@ -327,9 +316,17 @@ public class Spreadsheet
 
         try
         {
-            // Update the cell content with the new value
-            cellContents[name] = content;
+            // If the cell exists, update its contents. If it doesn't exist, create a new cell.
+            if (cellContents.ContainsKey(name))
+            {
+                cellContents[name].Contents = content;
+            }
+            else
+            {
+                cellContents[name] = new Cell(name, content);
+            }
 
+            // If the content is a formula, update dependencies
             if (content is Formula formula)
             {
                 foreach (var variable in formula.GetVariables())
@@ -344,7 +341,7 @@ public class Spreadsheet
         catch (CircularException)
         {
             // If a CircularException is thrown, revert the cell contents to the original value
-            cellContents[name] = originalContent;
+            cellContents[name].Contents = originalContent;
 
             // Rethrow the exception to indicate that the operation failed due to a circular dependency
             throw;
@@ -418,4 +415,28 @@ public class Spreadsheet
         // Add the current cell to the front of the changed list, indicating it needsto be recalculated.
         changed.AddFirst(name);
     }
+}
+
+/// <summary>
+/// Represents an individual cell in the spreadsheet.
+/// </summary>
+internal class Cell
+{
+    private readonly string name;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Cell"/> class.
+    /// </summary>
+    /// <param name="label">The label/name of the cell.</param>
+    /// <param name="contents">The contents of the cell.</param>
+    public Cell(string label, object contents)
+    {
+        name = label;
+        Contents = contents;
+    }
+
+    /// <summary>
+    /// Gets or sets the contents of the cell.
+    /// </summary>
+    public object Contents { get; set; }
 }
