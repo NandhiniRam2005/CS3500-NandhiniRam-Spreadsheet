@@ -21,7 +21,7 @@ using System.Text.RegularExpressions;
 ///            be copied for use in Academic Coursework.
 ///
 /// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
-/// did not copy it in part or whole from another source.  All
+/// did not copy it in part or whole from another source. All
 /// references used in the completion of the assignments are cited
 /// in my README file.
 ///
@@ -399,7 +399,6 @@ public class Spreadsheet
         // Iterate over all direct dependents of the current cell.
         foreach (string dependent in GetDirectDependents(name))
         {
-
             // Check for circular dependency by seeing if the dependent is the starting cell.
             if (dependent.Equals(start))
             {

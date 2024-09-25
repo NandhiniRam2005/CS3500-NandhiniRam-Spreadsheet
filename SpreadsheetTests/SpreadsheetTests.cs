@@ -75,7 +75,7 @@ namespace SpreadsheetTests
         public void SetCellContents_SelfReferencingFormula_ThrowsException()
         {
             var spreadsheet = new Spreadsheet();
-            spreadsheet.SetCellContents("A1", new Formula("A1 + 1")); 
+            spreadsheet.SetCellContents("A1", new Formula("A1 + 1"));
         }
 
         /// <summary>
