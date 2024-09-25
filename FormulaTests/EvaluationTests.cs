@@ -2,6 +2,10 @@
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
+namespace CS3500.Formula;
+
+using CS3500.Formula;
+
 /// <summary>
 /// Author:    Nandhini Ramanathan
 /// Partner:   None
@@ -15,19 +19,9 @@
 /// references used in the completion of the assignments are cited
 /// in my README file.
 ///
-/// File Contents
-///    This file contains MS unit tests for the formula class evaluation methods and equality between Formulas.
-/// </summary>
-
-namespace CS3500.Formula;
-
-using CS3500.Formula;
-
-/// <summary>
-///   <para>
-///     The following class is a tester class for the Formula class,
-///     focusing on the methods that evaluate the Formula and check for equality.
-///   </para>
+/// File Contents:
+/// The following class is a tester class for the Formula class,
+/// focusing on the methods that evaluate the Formula and check for equality.
 /// </summary>
 [TestClass]
 public class EvaluationTests
@@ -35,8 +29,9 @@ public class EvaluationTests
     // --- Tests for Evaluate method ---
 
     /// <summary>
+    /// <para>
     ///     Test addition between variables.
-    ///   </para>
+    /// </para>
     /// </summary>
     [TestMethod]
     public void Evaluate_SimpleAdditionWithVariables_ExpectedResult()

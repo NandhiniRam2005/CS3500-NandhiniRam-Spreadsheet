@@ -2,6 +2,13 @@
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
+namespace CS3500.Formula;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+
 /// <summary>
 /// Author:    Nandhini Ramanathan, Professor Joe, Danny, and Jim
 /// Partner:   None
@@ -15,20 +22,12 @@
 /// references used in the completion of the assignments are cited
 /// in my README file.
 ///
-/// File Contents
-///    This file defines the Formula class, which represents mathematical formulas
-///    in standard infix notation. The class is responsible for validating formulas,
-///    extracting variables, and converting the formula into a canonical string form
-///    with different public and private helper methods. This file can also now evaluate
-///    validated formulas.
+/// File Contents:
+/// This file defines the Formula class, which represents mathematical formulas
+/// in standard infix notation. The class is responsible for validating formulas,
+/// extracting variables, and converting the formula into a canonical string form
+/// with different public and private helper methods.
 /// </summary>
-
-namespace CS3500.Formula;
-
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 /// <summary>
 ///   <para>
@@ -43,7 +42,8 @@ using System.Threading.Tasks;
 ///     Spaces are significant only insofar that they delimit tokens.  For example, "xy" is
 ///     a single variable, "x y" consists of two variables "x" and y; "x23" is a single variable;
 ///     and "x 23" consists of a variable "x" and a number "23".  Otherwise, spaces are to be removed.
-///   </para>
+///    validated formulas.
+///    </para>
 /// </summary>
 public class Formula
 {
@@ -430,7 +430,7 @@ public class Formula
     /// </summary>
     /// <param name="token">The current token being processed.</param>
     /// <param name="isNextTokenOperand">A boolean indicating if the next token is expected to be an operand.</param>
-    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.<</param>
+    /// <param name="hasTokenInsideParentheses">A boolean if there is at least one valid token inside parentheses.</param>
     /// <exception cref="FormulaFormatException">Exception thrown if an invalid operand is found or it should not be present in the formula based on the token beside it.</exception>
     private void HandleOperand(string token, ref bool isNextTokenOperand, ref bool hasTokenInsideParentheses)
     {

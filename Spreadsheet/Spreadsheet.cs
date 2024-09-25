@@ -1,14 +1,37 @@
-﻿// <copyright file="DeleteMeClass1.cs" company="UofU-CS3500">
+﻿// <copyright file="Spreadsheet.cs" company="UofU-CS3500">
 // Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
-
 // Written by Joe Zachary for CS 3500, September 2013
-// Update by Profs Kopta and de St. Germain
+// Update by Professor Kopta and de St. Germain
 //     - Updated return types
 //     - Updated documentation
+
 namespace CS3500.Spreadsheet;
 
 using CS3500.Formula;
+using Microsoft.VisualBasic;
+using System.Text.RegularExpressions;
+
+/// <summary>
+/// Author:    Nandhini Ramanathan
+/// Partner:   None
+/// Date:      September 27,2024
+/// Course:    CS 3500, University of Utah, School of Computing
+/// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
+///            be copied for use in Academic Coursework.
+///
+/// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
+/// did not copy it in part or whole from another source.  All
+/// references used in the completion of the assignments are cited
+/// in my README file.
+///
+/// File Contents:
+/// The Spreadsheet class implements a spreadsheet, storing cell contents
+/// and managing dependencies between cells. It supports setting cells to values,
+/// text, or formulas, and ensures there are no circular dependencies. This file also
+/// includes the CircularException and InvalidNameException classes, which handle
+/// invalid name inputs and circular dependency errors respectively.
+/// </summary>
 
 /// <summary>
 ///   <para>
@@ -30,57 +53,19 @@ public class InvalidNameException : Exception
 
 /// <summary>
 ///   <para>
-///     An Spreadsheet object represents the state of a simple spreadsheet.  A
+///     A Spreadsheet object represents the state of a simple spreadsheet.  A
 ///     spreadsheet represents an infinite number of named cells.
 ///   </para>
-/// <para>
+///   <para>
 ///     Valid Cell Names: A string is a valid cell name if and only if it is one or
-///     more letters followed by one or more numbers, e.g., A5, BC27.
-/// </para>
-/// <para>
-///    Cell names are case insensitive, so "x1" and "X1" are the same cell name.
-///    Your code should normalize (uppercased) any stored name but accept either.
-/// </para>
-/// <para>
-///     A spreadsheet represents a cell corresponding to every possible cell name.  (This
-///     means that a spreadsheet contains an infinite number of cells.)  In addition to
-///     a name, each cell has a contents and a value.  The distinction is important.
-/// </para>
-/// <para>
-///     The <b>contents</b> of a cell can be (1) a string, (2) a double, or (3) a Formula.
-///     If the contents of a cell is set to the empty string, the cell is considered empty.
-/// </para>
-/// <para>
-///     By analogy, the contents of a cell in Excel is what is displayed on
-///     the editing line when the cell is selected.
-/// </para>
-/// <para>
-///     In a new spreadsheet, the contents of every cell is the empty string. Note:
-///     this is by definition (it is IMPLIED, not stored).
-/// </para>
-/// <para>
-///     The <b>value</b> of a cell can be (1) a string, (2) a double, or (3) a FormulaError.
-///     (By analogy, the value of an Excel cell is what is displayed in that cell's position
-///     in the grid.)
-/// </para>
-/// <list type="number">
-///   <item>If a cell's contents is a string, its value is that string.</item>
-///   <item>If a cell's contents is a double, its value is that double.</item>
-///   <item>
-///     <para>
-///       If a cell's contents is a Formula, its value is either a double or a FormulaError,
-///       as reported by the Evaluate method of the Formula class.  For this assignment,
-///       you are not dealing with values yet.
-///     </para>
-///   </item>
-/// </list>
-/// <para>
+///     more letters followed by one or more numbers, e.g., A5, BC27. Cell names are
+///     case insensitive, so "x1" and "X1" are the same cell name. Each cell has a
+///     contents and a value.
+///   </para>
+///   <para>
 ///     Spreadsheets are never allowed to contain a combination of Formulas that establish
 ///     a circular dependency.  A circular dependency exists when a cell depends on itself.
-///     For example, suppose that A1 contains B1*2, B1 contains C1*2, and C1 contains A1*2.
-///     A1 depends on B1, which depends on C1, which depends on A1.  That's a circular
-///     dependency.
-/// </para>
+///   </para>
 /// </summary>
 public class Spreadsheet
 {
@@ -91,15 +76,12 @@ public class Spreadsheet
     private readonly DependencyGraph dependencyGraph;
 
     /// <summary>
-    /// Initializes a new instance of the Spreadsheet class.
-    /// Sets up the dictionary for cell contents and initializes the DependencyGraph.
+    /// Initializes a new instance of the <see cref="Spreadsheet"/> class.
+    /// It initializes the cell contents dictionary and the dependency graph.
     /// </summary>
     public Spreadsheet()
     {
-        // Initialize the dictionary to store cell contents.
         cellContents = new Dictionary<string, object>();
-
-        // Initialize the DependencyGraph instance.
         dependencyGraph = new DependencyGraph();
     }
 
@@ -113,6 +95,7 @@ public class Spreadsheet
     public ISet<string> GetNamesOfAllNonemptyCells()
     {
         HashSet<string> nonEmptyCells = new HashSet<string>();
+
         foreach (var entry in cellContents)
         {
             if (!string.IsNullOrEmpty(entry.Value.ToString()))
@@ -120,17 +103,16 @@ public class Spreadsheet
                 nonEmptyCells.Add(entry.Key);
             }
         }
+
         return nonEmptyCells;
     }
 
     /// <summary>
     ///   Returns the contents (as opposed to the value) of the named cell.
     /// </summary>
-    ///
     /// <exception cref="InvalidNameException">
     ///   Thrown if the name is invalid.
     /// </exception>
-    ///
     /// <param name="name">The name of the spreadsheet cell to query. </param>
     /// <returns>
     ///   The contents as either a string, a double, or a Formula.
@@ -156,43 +138,27 @@ public class Spreadsheet
     /// <summary>
     ///  Set the contents of the named cell to the given number.
     /// </summary>
-    ///
     /// <exception cref="InvalidNameException">
     ///   If the name is invalid, throw an InvalidNameException.
     /// </exception>
-    ///
     /// <param name="name"> The name of the cell. </param>
     /// <param name="number"> The new content of the cell. </param>
     /// <returns>
     ///   <para>
     ///     This method returns an ordered list consisting of the passed in name
     ///     followed by the names of all other cells whose value depends, directly
-    ///     or indirectly, on the named cell.
-    ///   </para>
-    ///   <para>
-    ///     The order must correspond to a valid dependency ordering for recomputing
-    ///     all of the cells, i.e., if you re-evaluate each cell in the order of the list,
-    ///     the overall spreadsheet will be correctly updated.
-    ///   </para>
-    ///   <para>
-    ///     For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-    ///     list [A1, B1, C1] is returned, i.e., A1 was changed, so then A1 must be
-    ///     evaluated, followed by B1 re-evaluated, followed by C1 re-evaluated.
+    ///     or indirectly, on the named cell. The order must correspond to a valid
+    ///     dependency ordering for recomputing all of the cells.
     ///   </para>
     /// </returns>
     public IList<string> SetCellContents(string name, double number)
     {
-        ValidateCellName(name);
-        cellContents[name] = number;
-
-        // Update dependencies and return affected cells.
-        return GetAffectedCells(name);
+        return SetCellContentsHelper(name, number);
     }
 
     /// <summary>
     ///   The contents of the named cell becomes the given text.
     /// </summary>
-    ///
     /// <exception cref="InvalidNameException">
     ///   If the name is invalid, throw an InvalidNameException.
     /// </exception>
@@ -203,11 +169,7 @@ public class Spreadsheet
     /// </returns>
     public IList<string> SetCellContents(string name, string text)
     {
-        ValidateCellName(name);
-        cellContents[name] = text;
-
-        // Update dependencies and return affected cells.
-        return GetAffectedCells(name);
+        return SetCellContentsHelper(name, text);
     }
 
     /// <summary>
@@ -232,7 +194,15 @@ public class Spreadsheet
     /// </returns>
     public IList<string> SetCellContents(string name, Formula formula)
     {
-        throw new NotImplementedException();
+        // Track visited cells to avoid infinite loops
+        var visited = new HashSet<string>();
+
+        if (HasCircularDependencyHelper(name, formula, visited))
+        {
+            throw new CircularException();
+        }
+
+        return SetCellContentsHelper(name, formula);
     }
 
     /// <summary>
@@ -245,78 +215,143 @@ public class Spreadsheet
     ///     Returns an enumeration, without duplicates, of the names of all cells
     ///     that contain formulas containing name.
     ///   </para>
-    ///   <para>For example, suppose that: </para>
-    ///   <list type="bullet">
-    ///      <item>A1 contains 3</item>
-    ///      <item>B1 contains the formula A1 * A1</item>
-    ///      <item>C1 contains the formula B1 + A1</item>
-    ///      <item>D1 contains the formula B1 - C1</item>
-    ///   </list>
-    ///   <para> The direct dependents of A1 are B1 and C1. </para>
     /// </returns>
     private IEnumerable<string> GetDirectDependents(string name)
     {
-        throw new NotImplementedException();
+        return dependencyGraph.GetDependents(name);
     }
 
     /// <summary>
-    /// Checks if the given cell name is valid based on the specified criteria.
+    /// Checks if the given cell name is valid. It must be one or more letters
+    ///   followed by one or more numbers. It cannot be empty or null.
     /// </summary>
     /// <param name="name">The cell name to check.</param>
     /// <returns>True if valid, otherwise false.</returns>
     private bool IsValidCellName(string name)
     {
-        // A valid name consists of one or more letters followed by one or more numbers.
-        // This can be improved with a regex if needed.
-        return !string.IsNullOrEmpty(name) && char.IsLetter(name[0]);
+        // Check if the name is not null or empty.
+        if (string.IsNullOrEmpty(name))
+        {
+            return false;
+        }
+
+        // Define the regex pattern for a valid cell name (from the Formula class)
+        string cellNamePattern = @"[a-zA-Z]+\d+";
+
+        // Check if the name matches the regex pattern.
+        return Regex.IsMatch(name, cellNamePattern);
     }
 
     /// <summary>
-    /// 
+    /// Checks if setting the contents of the specified cell to the given formula
+    /// would create a circular dependency.
     /// </summary>
-    /// <param name="name"></param>
-    /// <exception cref="InvalidNameException"></exception>
-    private void ValidateCellName(string name)
+    /// <param name="name">The name of the cell to check.</param>
+    /// <param name="formula">The formula to set.</param>
+    /// <param name="visited">A set to keep track of visited cells.</param>
+    /// <returns>True if a circular dependency would occur, otherwise false.</returns>
+    private bool HasCircularDependencyHelper(string name, Formula formula, HashSet<string> visited)
     {
+        // Loop through variables in the formula
+        foreach (var variable in formula.GetVariables())
+        {
+            // If the variable is already visited, we have a circular dependency
+            if (visited.Contains(variable))
+            {
+                return true;
+            }
+
+            // Add the current variable to the visited set
+            visited.Add(variable);
+
+            // Recursively check dependents for circular dependencies
+            foreach (var dependent in GetDirectDependents(variable))
+            {
+                if (dependent == name)
+                {
+                    return true;
+                }
+
+                if (HasCircularDependencyHelper(dependent, formula, visited))
+                {
+                    return true;
+                }
+            }
+
+            // Remove variable after checking
+            visited.Remove(variable);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Sets the contents of a specified cell and updates the dependencies.
+    /// If a circular dependency is detected, the operation is stopped and reverted.
+    /// </summary>
+    /// <exception cref="InvalidNameException">
+    /// Thrown if the cell name is invalid.
+    /// </exception>
+    /// <exception cref="CircularException">
+    /// Thrown if setting the content causes a circular dependency.
+    /// </exception>
+    /// <param name="name">The name of the cell to set the content for.</param>
+    /// <param name="content">The content to set (string, double, or formula).</param>
+    /// <returns>A list of cells that need to be recalculated after the update.</returns>
+    private IList<string> SetCellContentsHelper(string name, object content)
+    {
+        // Check if the cell name is valid
         if (!IsValidCellName(name))
         {
             throw new InvalidNameException();
         }
-    }
 
-    /// <summary>
-    /// Get a list of cells affected by the change in the specified cell.
-    /// </summary>
-    /// <param name="name">The name of the changed cell.</param>
-    /// <returns>An ordered list of cell names that need recalculation.</returns>
-    private IList<string> GetAffectedCells(string name)
-    {
-        // Create a list to hold all affected cells.
-        List<string> affectedCells = new List<string>();
+        // Store the original contents of the cell in case we need to revert to it
+        object originalContent;
 
-        // Get the direct dependents of the given cell.
-        IEnumerable<string> dependents = GetDirectDependents(name);
-
-        // Iterate over each dependent cell.
-        foreach (var dependent in dependents)
+        // Check if the cell already has content and store it, or set it to an empty string
+        if (cellContents.ContainsKey(name))
         {
-            // Add the dependent to the affected cells list.
-            affectedCells.Add(dependent);
-
-            // Recursively call this method to get all affected cells of the current dependent.
-            foreach (var affectedCell in GetAffectedCells(dependent))
-            {
-                affectedCells.Add(affectedCell);
-            }
+            originalContent = cellContents[name];
+        }
+        else
+        {
+            originalContent = string.Empty;
         }
 
-        return affectedCells;
+        // Clear existing dependencies on the cell to avoid issues when updating content
+        if (cellContents.ContainsKey(name))
+        {
+            dependencyGraph.ReplaceDependents(name, new HashSet<string>());
+        }
+
+        try
+        {
+            // Update the cell content with the new value
+            cellContents[name] = content;
+
+            if (content is Formula formula)
+            {
+                foreach (var variable in formula.GetVariables())
+                {
+                    dependencyGraph.AddDependency(name, variable);
+                }
+            }
+
+            // Return a list of cells that need to be recalculated as a result of this change
+            return GetCellsToRecalculate(name).ToList();
+        }
+        catch (CircularException)
+        {
+            // If a CircularException is thrown, revert the cell contents to the original value
+            cellContents[name] = originalContent;
+
+            // Rethrow the exception to indicate that the operation failed due to a circular dependency
+            throw;
+        }
     }
 
     /// <summary>
-    ///   <para>
-    ///     This method is implemented for you, but makes use of your GetDirectDependents.
-    ///   </para>
     ///   <para>
     ///     Returns an enumeration of the names of all cells whose values must
     ///     be recalculated, assuming that the contents of the cell referred
@@ -327,69 +362,58 @@ public class Spreadsheet
     ///     If the cell referred to by name is involved in a circular dependency,
     ///     throws a CircularException.
     ///   </exception>
-    ///   <para>
-    ///     For example, suppose that:
-    ///   </para>
-    ///   <list type="number">
-    ///     <item>
-    ///       A1 contains 5
-    ///     </item>
-    ///     <item>
-    ///       B1 contains the formula A1 + 2.
-    ///     </item>
-    ///     <item>
-    ///       C1 contains the formula A1 + B1.
-    ///     </item>
-    ///     <item>
-    ///       D1 contains the formula A1 * 7.
-    ///     </item>
-    ///     <item>
-    ///       E1 contains 15
-    ///     </item>
-    ///   </list>
-    ///   <para>
-    ///     If A1 has changed, then A1, B1, C1, and D1 must be recalculated,
-    ///     and they must be recalculated in an order which has A1 first, and B1 before C1
-    ///     (there are multiple such valid orders).
-    ///     The method will produce one of those enumerations.
-    ///   </para>
-    ///   <para>
-    ///      PLEASE NOTE THAT THIS METHOD DEPENDS ON THE METHOD GetDirectDependents.
-    ///      IT WON'T WORK UNTIL GetDirectDependents IS IMPLEMENTED CORRECTLY.
-    ///   </para>
     /// </summary>
-    /// <param name="name"> The name of the cell.  Requires that name be a valid cell name.</param>
+    /// <param name="name"> The name of the cell. Requires that name be a valid cell name.</param>
     /// <returns>
     ///    Returns an enumeration of the names of all cells whose values must
     ///    be recalculated.
     /// </returns>
     private IEnumerable<string> GetCellsToRecalculate(string name)
     {
+        // Initialize a linked list to keep track of cells that need to be recalculated.
         LinkedList<string> changed = new();
+
+        // Initialize a hash set to track visited cells and prevent infinite loops.
         HashSet<string> visited = [];
+
         Visit(name, name, visited, changed);
         return changed;
     }
 
     /// <summary>
-    ///   A helper for the GetCellsToRecalculate method.
-    ///   FIXME: You should fully comment what is going on below using XML tags as appropriate.
+    /// This method performs a depth-first search to find all cells that depend
+    /// on the given cell. It checks for circular dependencies and adds the
+    /// names of dependent cells to the changed list in the order they should
+    /// be recalculated. It is a helper method used for the GetCellsToRecalculate method.
     /// </summary>
+    /// <param name="start">The name of the original cell being checked for dependencies.</param>
+    /// <param name="name">The name of the current cell being visited in the search.</param>
+    /// <param name="visited">A set of visited cells to track which cells have already been processed.</param>
+    /// <param name="changed">>A linked list to maintain the order of cells that need to be recalculated.</param>
+    /// <exception cref="CircularException">Thrown when a circular dependency is detected.</exception>
     private void Visit(string start, string name, ISet<string> visited, LinkedList<string> changed)
     {
+        // Mark the current cell as visited.
         visited.Add(name);
+
+        // Iterate over all direct dependents of the current cell.
         foreach (string dependent in GetDirectDependents(name))
         {
+
+            // Check for circular dependency by seeing if the dependent is the starting cell.
             if (dependent.Equals(start))
             {
                 throw new CircularException();
             }
+
+            // If the dependent cell hasn't been visited yet, recursively visit it.
             else if (!visited.Contains(dependent))
             {
                 Visit(start, dependent, visited, changed);
             }
         }
 
+        // Add the current cell to the front of the changed list, indicating it needsto be recalculated.
         changed.AddFirst(name);
     }
 }

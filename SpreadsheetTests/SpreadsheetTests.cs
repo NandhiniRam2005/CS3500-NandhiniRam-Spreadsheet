@@ -2,39 +2,33 @@
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
-/// <summary>
-/// Author:    Nandhini Ramanathan
-/// Partner:   None
-/// Date:      September 27, 2024
-/// Course:    CS 3500, University of Utah, School of Computing
-/// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
-///            be copied for use in Academic Coursework.
-///
-//// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
-/// did not copy it in part or whole from another source.  All
-/// references used in the completion of the assignments are cited
-/// in my README file.
-///
-//// File Contents
-///    This file contains MS unit tests for the spreadsheet class.
-/// </summary>
-
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using CS3500.Spreadsheet;
-using CS3500.Formula;
-using System.Collections.Generic;
-
 namespace SpreadsheetTests
 {
+    using System.Collections.Generic;
+    using CS3500.Formula;
+    using CS3500.Spreadsheet;
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
+
     /// <summary>
-    ///   <para>
-    ///     The following class is a tester class for the Spreadsheet class.
-    ///   </para>
+    /// Author:    Nandhini Ramanathan
+    /// Partner:   None
+    /// Date:      September 27, 2024
+    /// Course:    CS 3500, University of Utah, School of Computing
+    /// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
+    ///            be copied for use in Academic Coursework.
+    ///
+    /// I, Nandhini Ramanathan, certify that I wrote this code from scratch and
+    /// did not copy it in part or whole from another source.  All
+    /// references used in the completion of the assignments are cited
+    /// in my README file.
+    ///
+    /// File Contents
+    ///    This file contains MS unit tests for the spreadsheet class.
     /// </summary>
     [TestClass]
     public class SpreadsheetTests
     {
-        // --- Tests for bla method ---
+        // --- Tests for SetCellContents method ---
 
         /// <summary>
         ///     Tests setting cell contents to a number and retrieving it.
@@ -68,9 +62,20 @@ namespace SpreadsheetTests
         {
             var spreadsheet = new Spreadsheet();
             spreadsheet.SetCellContents("A3", "World");
-            spreadsheet.SetCellContents("A3", "");
+            spreadsheet.SetCellContents("A3", string.Empty);
 
             Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("A3"));
+        }
+
+        /// <summary>
+        ///     Tests setting a cell to a formula that references itself and checks for a circular dependency.
+        /// </summary>
+        [TestMethod]
+        [ExpectedException(typeof(CircularException))]
+        public void SetCellContents_SelfReferencingFormula_ThrowsException()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("A1", new Formula("A1 + 1")); 
         }
 
         /// <summary>
@@ -99,6 +104,19 @@ namespace SpreadsheetTests
         }
 
         /// <summary>
+        ///     Tests setting cell contents with an invalid cell name and expects an exception.
+        /// </summary>
+        [TestMethod]
+        [ExpectedException(typeof(InvalidNameException))]
+        public void SetCellContents_InvalidCellName_ThrowsException()
+        {
+            var spreadsheet = new Spreadsheet();
+            spreadsheet.SetCellContents("1A", "Invalid"); // Invalid name should throw exception
+        }
+
+        // --- Tests for GetNamesOfAllNonemptyCells method ---
+
+        /// <summary>
         ///     Tests getting names of all non-empty cells in the spreadsheet.
         /// </summary>
         [TestMethod]
@@ -114,6 +132,8 @@ namespace SpreadsheetTests
             Assert.AreEqual(2, nonEmptyCells.Count);
         }
 
+        // --- Tests for GetCellContents method ---
+
         /// <summary>
         ///     Tests getting cell contents with an invalid cell name and expects an exception.
         /// </summary>
@@ -122,18 +142,7 @@ namespace SpreadsheetTests
         public void GetCellContents_InvalidCellName_ThrowsException()
         {
             var spreadsheet = new Spreadsheet();
-            spreadsheet.GetCellContents(""); // Empty name should throw InvalidNameException
-        }
-
-        /// <summary>
-        ///     Tests setting cell contents with an invalid cell name and expects an exception.
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidNameException))]
-        public void SetCellContents_InvalidCellName_ThrowsException()
-        {
-            var spreadsheet = new Spreadsheet();
-            spreadsheet.SetCellContents("1A", "Invalid"); // Invalid name should throw exception
+            spreadsheet.GetCellContents(string.Empty); // Empty name should throw InvalidNameException
         }
 
         /// <summary>
@@ -145,17 +154,6 @@ namespace SpreadsheetTests
             var spreadsheet = new Spreadsheet();
 
             Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("C1")); // Should return empty string
-        }
-
-        /// <summary>
-        ///     Tests setting a cell to a formula that references itself and checks for a circular dependency.
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(CircularException))]
-        public void SetCellContents_SelfReferencingFormula_ThrowsException()
-        {
-            var spreadsheet = new Spreadsheet();
-            spreadsheet.SetCellContents("A1", new Formula("A1 + 1")); // This should throw CircularException
         }
     }
 }

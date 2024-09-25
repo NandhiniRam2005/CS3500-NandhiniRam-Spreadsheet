@@ -2,6 +2,10 @@
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
+namespace CS3500.DevelopmentTests;
+
+using CS3500;
+
 /// <summary>
 /// Author:    Nandhini Ramanathan
 /// Partner:   None
@@ -15,15 +19,7 @@
 /// references used in the completion of the assignments are cited
 /// in my README file.
 ///
-/// File Contents
-///    This file contains MS unit tests for the DependencyGraph class.
-/// </summary>
-
-namespace CS3500.DevelopmentTests;
-
-using CS3500;
-
-/// <summary>
+/// File Contents:
 /// This is a test class for DependencyGraphTest and is intended
 /// to contain all DependencyGraphTest Unit Tests.
 /// </summary>

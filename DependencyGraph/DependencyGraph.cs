@@ -8,6 +8,8 @@
 // (Clarified meaning of dependent and dependee.)
 // (Clarified names in solution/project structure.)
 
+namespace CS3500;
+
 /// <summary>
 /// Author:    Nandhini Ramanathan, Joe Zachary, Daniel Kopta, and H. James de St. Germain
 /// Partner:   None
@@ -20,15 +22,8 @@
 /// did not copy it in part or whole from another source.  All
 /// references used in the completion of the assignments are cited in my README file.
 ///
-/// File Contents
-/// This file implements a DependencyGraph that manages dependencies between strings
-/// in a directed graph.
-/// </summary>
-
-namespace CS3500;
-
-/// <summary>
-///   <para>
+/// File Contents:
+/// <para>
 ///     (s1,t1) is an ordered pair of strings, meaning t1 depends on s1.
 ///     (in other words: s1 must be evaluated before t1.)
 ///   </para>
@@ -50,19 +45,6 @@ namespace CS3500;
 ///       (The set of things that s depends on.)
 ///     </item>
 ///   </list>
-///   <para>
-///      For example, suppose DG = {("a", "b"), ("a", "c"), ("b", "d"), ("d", "d")}.
-///   </para>
-///   <code>
-///     dependents("a") = {"b", "c"}
-///     dependents("b") = {"d"}
-///     dependents("c") = {}
-///     dependents("d") = {"d"}
-///     dependees("a")  = {}
-///     dependees("b")  = {"a"}
-///     dependees("c")  = {"a"}
-///     dependees("d")  = {"b", "d"}
-///   </code>
 /// </summary>
 public class DependencyGraph
 {
@@ -128,7 +110,7 @@ public class DependencyGraph
     {
         if (dependentsMap.ContainsKey(nodeName))
         {
-            return dependentsMap[nodeName];
+            return new HashSet<string>(dependentsMap[nodeName]);
         }
         else
         {
@@ -147,7 +129,7 @@ public class DependencyGraph
     {
         if (dependeesMap.ContainsKey(nodeName))
         {
-            return dependeesMap[nodeName];
+            return new HashSet<string>(dependeesMap[nodeName]);
         }
         else
         {

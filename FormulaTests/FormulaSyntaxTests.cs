@@ -16,7 +16,7 @@
 /// in my README file.
 ///
 /// File Contents
-///    This file contains MS unit tests for the formula class. It tests the three main public methods: 
+///    This file contains MS unit tests for the formula class. It tests the three main public methods:
 ///    Formula Constructor, GetVariables, and ToString, along with implicitly testing the private helper methods.
 /// </summary>
 
@@ -172,7 +172,6 @@ public class FormulaSyntaxTests
         _ = new Formula("89E-9");
     }
 
-
     /// <summary>
     ///   <para>
     ///     This test makes sure a single negative scientific notation number token using a small e is still valid.
@@ -186,7 +185,7 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
-    ///     This test makes sure an operator token by itself is invalid. This also tests that having an operator as the first token is invalid
+    ///     This test makes sure an operator token by itself is invalid. This also tests that having an operator as the first token is invalid.
     ///   </para>
     /// </summary>
     [TestMethod]
@@ -615,7 +614,7 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
-    ///     This test makes sure a that a formula containing no variables returns an empty set
+    ///     This test makes sure a that a formula containing no variables returns an empty set.
     ///   </para>
     /// </summary>
     [TestMethod]
@@ -693,7 +692,7 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
-    ///     This test makes sure a that a formula containing integers returns the expected string
+    ///     This test makes sure a that a formula containing integers returns the expected string.
     ///   </para>
     /// </summary>
     [TestMethod]
@@ -729,7 +728,7 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
-    ///     This test makes sure a that a decimal with many leading zeroes is changed to standard form by double.tryParse 
+    ///     This test makes sure a that a decimal with many leading zeroes is changed to standard form by double.tryParse.
     ///   </para>
     /// </summary>
     [TestMethod]
@@ -741,7 +740,7 @@ public class FormulaSyntaxTests
 
     /// <summary>
     ///   <para>
-    ///     This test makes sure a that a formula with many spaces still returns a valid string without the spaces. 
+    ///     This test makes sure a that a formula with many spaces still returns a valid string without the spaces.
     ///   </para>
     /// </summary>
     [TestMethod]
