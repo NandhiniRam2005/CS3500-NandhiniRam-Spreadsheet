@@ -266,7 +266,7 @@ public class SpreadsheetTests
     }
 
     /// <summary>
-    ///     Tests setting multiple formulas where the circular dependency is detected after multiple entries where one 
+    ///     Tests setting multiple formulas where the circular dependency is detected after multiple entries where one
     ///     cell causes a circularDependencyException but the other cell does not.
     /// </summary>
     [TestMethod]
