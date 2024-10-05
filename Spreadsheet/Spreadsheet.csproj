@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Spreadsheet.cs~RF3294b16a.TMP" />
     <None Remove="stylecop.json" />
   </ItemGroup>
 
