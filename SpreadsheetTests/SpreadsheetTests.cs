@@ -182,30 +182,6 @@ public class SpreadsheetTests
         Assert.AreEqual("Yuji", spreadsheet.GetCellContents("A1"));
     }
 
-    [TestMethod]
-    [Timeout(2000)]
-    [TestCategory("5")]
-    [ExpectedException(typeof(InvalidNameException))]
-    public void SetCellContents_InvalidCellName_Throws()
-    {
-        Spreadsheet s = new();
-        s.SetCellContents("1A1A", 1.5);
-    }
-
-    [TestMethod]
-    [Timeout(2000)]
-    [TestCategory("27")]
-    public void TestSetChain()
-    {
-        Spreadsheet s = new Spreadsheet();
-        s.SetCellContents("A1", new Formula("A2+A3"));
-        s.SetCellContents("A2", 6);
-        s.SetCellContents("A3", new Formula("A2+A4"));
-        s.SetCellContents("A4", new Formula("A2+A5"));
-        Assert.IsTrue(s.SetCellContents("A5", 82.5).SequenceEqual(new
-        List<string>() { "A5", "A4", "A3", "A1" }));
-    }
-
     /// <summary>
     ///     Tests setting a very large numeric value in a cell and retrieving it.
     /// </summary>

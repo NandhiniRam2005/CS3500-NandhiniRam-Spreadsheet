@@ -252,41 +252,9 @@ public class Spreadsheet
     /// <returns>True if a circular dependency would occur, otherwise false.</returns>
     private bool HasCircularDependencyHelper(string name, Formula formula, HashSet<string> visited)
     {
-        //// Check if the current cell is already in visited
-        //if (visited.Contains(name))
-        //{
-        //    return true;
-        //}
-
-        //// Add the current cell to the visited set
-        //visited.Add(name);
-
-        //// Loop through the variables in the formula
-        //foreach (var variable in formula.GetVariables())
-        //{
-        //    // Check if the variable exists in cellContents
-        //    if (cellContents.TryGetValue(variable, out var cellContent))
-        //    {
-        //        // Ensure the cellContent is not null and its Contents are of type Formula
-        //        if (cellContent?.Contents is Formula dependentFormula)
-        //        {
-        //            // Check dependents for circular dependencies
-        //            if (HasCircularDependencyHelper(variable, dependentFormula, visited))
-        //            {
-        //                return true;
-        //            }
-        //        }
-        //    }
-        //}
-
-        //// Remove the current cell from visited for the next checks
-        //visited.Remove(name);
-        //return false;
-
         // Check if the current cell is already in visited
         if (visited.Contains(name))
         {
-            Console.WriteLine($"Circular dependency detected at: {name}");
             return true;
         }
 
@@ -296,13 +264,11 @@ public class Spreadsheet
         // Loop through the variables in the formula
         foreach (var variable in formula.GetVariables())
         {
-            Console.WriteLine($"Checking variable: {variable}");
-
             // Check if the variable exists in cellContents
             if (cellContents.TryGetValue(variable, out var cellContent))
             {
                 // Ensure the cellContent is not null and its Contents are of type Formula
-                if (cellContent?.Contents is Formula dependentFormula)
+                if (cellContent.Contents is Formula dependentFormula)
                 {
                     // Check dependents for circular dependencies
                     if (HasCircularDependencyHelper(variable, dependentFormula, visited))
