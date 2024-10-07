@@ -5,6 +5,7 @@ namespace CS3500.GradingTestsPS5;
 using CS3500.Spreadsheet;
 using CS3500.Formula;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 /// <summary>
 /// Authors: Joe Zachary
 /// Daniel Kopta
@@ -483,10 +484,9 @@ public void TestStress3()
             firstCells.AddFirst("A1" + i);
             lastCells.AddFirst("A1" + (i + 250));
         }
-        Assert.IsTrue(s.SetCellContents("A1249", 25.0).SequenceEqual(firstCells
-        ));
-        Assert.IsTrue(s.SetCellContents("A1499",
-        0).SequenceEqual(lastCells));
+
+        Assert.IsTrue(s.SetCellContents("A1249", 250).SequenceEqual(firstCells));
+        Assert.IsTrue(s.SetCellContents("A1499", 0).SequenceEqual(lastCells));
     }
     [TestMethod]
     [Timeout(2000)]

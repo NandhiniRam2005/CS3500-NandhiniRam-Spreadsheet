@@ -197,11 +197,13 @@ public class Spreadsheet
         // Track visited cells to avoid infinite loops
         var visited = new HashSet<string>();
 
+        // Check for circular dependency before making any changes
         if (HasCircularDependencyHelper(name, formula, visited))
         {
             throw new CircularException();
         }
 
+        // If no circular dependency, proceed with setting the contents
         return SetCellContentsHelper(name, formula);
     }
 
@@ -252,7 +254,7 @@ public class Spreadsheet
     /// <returns>True if a circular dependency would occur, otherwise false.</returns>
     private bool HasCircularDependencyHelper(string name, Formula formula, HashSet<string> visited)
     {
-        // Check if the current cell is already in visited
+        // If the current cell is already in the visited set, a circular dependency exists
         if (visited.Contains(name))
         {
             return true;
@@ -261,16 +263,22 @@ public class Spreadsheet
         // Add the current cell to the visited set
         visited.Add(name);
 
-        // Loop through the variables in the formula
+        // Check each variable in the formula
         foreach (var variable in formula.GetVariables())
         {
-            // Check if the variable exists in cellContents
+            // Direct self-reference check
+            if (variable.Equals(name))
+            {
+                return true;
+            }
+
+            // If the variable exists in cellContents, check its dependencies
             if (cellContents.TryGetValue(variable, out var cellContent))
             {
-                // Ensure the cellContent is not null and its Contents are of type Formula
+                // Only check if the cell contains a formula
                 if (cellContent.Contents is Formula dependentFormula)
                 {
-                    // Check dependents for circular dependencies
+                    // Recursive check for circular dependencies
                     if (HasCircularDependencyHelper(variable, dependentFormula, visited))
                     {
                         return true;
@@ -279,8 +287,9 @@ public class Spreadsheet
             }
         }
 
-        // Remove the current cell from visited for the next checks
+        // Remove the current cell from the visited set before returning
         visited.Remove(name);
+
         return false;
     }
 
@@ -305,7 +314,6 @@ public class Spreadsheet
             throw new InvalidNameException();
         }
 
-        // Store original content if cell exists, otherwise set to empty string.
         object originalContent = cellContents.ContainsKey(name) ? cellContents[name].Contents : string.Empty;
 
         // Clear cell's existing dependents if it already exists.
@@ -314,35 +322,41 @@ public class Spreadsheet
             dependencyGraph.ReplaceDependents(name, new HashSet<string>());
         }
 
+        // Backup the original dependencies
+        HashSet<string> originalDependents = new(dependencyGraph.GetDependents(name));
+
         try
         {
-            // Update cell content or add a new cell.
-            if (cellContents.ContainsKey(name))
-            {
-                cellContents[name].Contents = content;
-            }
-            else
-            {
-                cellContents[name] = new Cell(name, content);
-            }
-
-            // Update dependencies if content is a formula.
+            // If the content is a formula, validate for circular dependencies
             if (content is Formula formula)
             {
+                // Temporarily add the formula's variables to the graph for circular dependency check
                 foreach (var variable in formula.GetVariables())
                 {
                     dependencyGraph.AddDependency(variable, name);
                 }
             }
 
-            // Return cells to recalculate in dependency order.
+            // Update the content and dependencies only if no circular dependency is found
+            cellContents[name] = new Cell(name, content);
+
+            // Update dependencies for formulas
+            if (content is Formula newFormula)
+            {
+                foreach (var variable in newFormula.GetVariables())
+                {
+                    dependencyGraph.AddDependency(variable, name);
+                }
+            }
+
+            // Return cells to recalculate in dependency order
             return GetCellsToRecalculate(name).ToList();
         }
         catch (CircularException)
         {
-            // Revert content and dependencies on circular dependency.
+            // Revert content and dependencies on circular dependency
             cellContents[name].Contents = originalContent;
-            dependencyGraph.ReplaceDependents(name, new HashSet<string>());
+            dependencyGraph.ReplaceDependents(name, originalDependents);
             throw;
         }
     }
