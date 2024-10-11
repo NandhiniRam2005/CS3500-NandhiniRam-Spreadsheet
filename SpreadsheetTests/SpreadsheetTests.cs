@@ -4,7 +4,6 @@
 
 namespace SpreadsheetTests;
 
-using System.Collections.Generic;
 using CS3500.Formula;
 using CS3500.Spreadsheet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
