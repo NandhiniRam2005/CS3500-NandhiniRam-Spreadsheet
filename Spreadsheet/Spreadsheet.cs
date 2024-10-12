@@ -467,3 +467,22 @@ internal class Cell
     /// </summary>
     public object Contents { get; set; }
 }
+
+/// <summary>
+/// <para>
+///   Thrown to indicate that a read or write attempt has failed with
+///   an expected error message informing the user of what went wrong.
+/// </para>
+/// </summary>
+public class SpreadsheetReadWriteException : Exception
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SpreadsheetReadWriteException"/> class.
+    /// Creates the exception with a message defining what went wrong.
+    /// </summary>
+    /// <param name="msg"> An informative message to the user.</param>
+    public SpreadsheetReadWriteException(string msg)
+    : base(msg)
+    {
+    }
+}
