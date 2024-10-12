@@ -8,7 +8,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{42274F26-D2A7-4754-9297-BAC0AB2004BA}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		whiteboard\architecture.png = whiteboard\architecture.png
+		whiteboard\dependencygraph_whiteboard.png = whiteboard\dependencygraph_whiteboard.png
+		whiteboard\formula_whiteboard.png = whiteboard\formula_whiteboard.png
 		README.md = README.md
+		whiteboard\spreadsheet_whiteboard.png = whiteboard\spreadsheet_whiteboard.png
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FormulaTests", "FormulaTests\FormulaTests.csproj", "{1CE09C9A-2F10-48CE-BF3D-46416CABC1F7}"
@@ -21,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Spreadsheet", "Spreadsheet\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SpreadsheetTests", "SpreadsheetTests\SpreadsheetTests.csproj", "{751B6E61-5A78-480E-BB1F-C19AC2BD4F5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GradingTestsPS5", "GradingTestsPS5\GradingTestsPS5.csproj", "{FADA7A3C-E0E7-4024-A7DC-AB7FCEE92720}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GradingTestsPS5", "GradingTestsPS5\GradingTestsPS5.csproj", "{FADA7A3C-E0E7-4024-A7DC-AB7FCEE92720}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
