@@ -226,7 +226,19 @@ public class Spreadsheet
     /// </exception>
     public object GetCellValue(string cellName)
     {
-        return cellName;
+        if (string.IsNullOrWhiteSpace(cellName) || !IsValidCellName(cellName))
+        {
+            throw new InvalidNameException();
+        }
+
+        // Check if the cell exists in the dictionary
+        if (!cellContents.TryGetValue(cellName, out var cell))
+        {
+            throw new InvalidNameException(); // Throw an exception if it doesn't exist
+        }
+
+        // Return the computed value of the cell
+        return cell.Contents;
     }
 
     /// <summary>
