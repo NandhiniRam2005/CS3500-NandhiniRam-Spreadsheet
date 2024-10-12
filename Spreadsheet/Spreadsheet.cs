@@ -445,7 +445,7 @@ public class Spreadsheet
 }
 
 /// <summary>
-/// Represents an individual cell in spreadsheet.
+/// Represents an individual cell in the spreadsheet.
 /// </summary>
 internal class Cell
 {
