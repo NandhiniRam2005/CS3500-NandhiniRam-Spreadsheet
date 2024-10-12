@@ -27,6 +27,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class SpreadsheetTests
 {
+    // File name used for the tests below so that it doesn't have to instantiated each time in every test.
+    private const string TestFile = "testSpreadsheet.json";
+
     // --- Tests for SetCellContents method ---
 
     /// <summary>
@@ -435,4 +438,202 @@ public class SpreadsheetTests
         Assert.AreEqual(new Formula("A1 + 5"), spreadsheet.GetCellContents("C1"));
         Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("D1"));
     }
+
+    // --- Tests for GetCellValue method ---
+
+    /// <summary>
+    ///     Tests getting the value of a cell containing a number.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_NumberCell_ReturnsNumberValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", 42.0);
+        var value = spreadsheet.GetCellValue("A1");
+
+        Assert.AreEqual(42.0, value);
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a cell containing text.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_TextCell_ReturnsTextValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A2", "Hello");
+        var value = spreadsheet.GetCellValue("A2");
+
+        Assert.AreEqual("Hello", value);
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a cell containing a formula.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_FormulaCell_ReturnsCalculatedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", 5.0);
+        spreadsheet.SetCellContents("B1", new Formula("A1 + 10"));
+        var value = spreadsheet.GetCellValue("B1");
+
+        Assert.AreEqual(15.0, value); // Assuming the formula calculates correctly
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a cell that is empty.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_EmptyCell_ReturnsDefaultValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        var value = spreadsheet.GetCellValue("C1");
+
+        Assert.AreEqual(0.0, value); // Assuming default value for empty cells is 0.0
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a cell with an invalid name and expects an exception.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(InvalidNameException))]
+    public void GetCellValue_InvalidCellName_ThrowsException()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.GetCellValue("InvalidCell");
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a formula cell that references a non-existent cell.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_FormulaReferencesNonExistentCell_ReturnsZero()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", new Formula("B1 + 1")); // B1 does not exist yet
+        var value = spreadsheet.GetCellValue("A1");
+
+        Assert.AreEqual(1.0, value); // Assuming default value for non-existent cells is 0
+    }
+
+    /// <summary>
+    ///     Tests that modifying a referenced cell updates the value in the dependent cell.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_UpdateReferencedCell_UpdatesDependentValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", 5.0);
+        spreadsheet.SetCellContents("B1", new Formula("A1 + 10"));
+        spreadsheet.SetCellContents("A1", 20.0); // Update A1
+        var value = spreadsheet.GetCellValue("B1");
+
+        Assert.AreEqual(30.0, value); // B1 should now reflect the updated A1 value
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a complex formula with multiple dependencies.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_ComplexFormula_ReturnsCalculatedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", 10.0);
+        spreadsheet.SetCellContents("B1", 20.0);
+        spreadsheet.SetCellContents("C1", new Formula("A1 + B1 + 5")); // Formula involving A1 and B1
+        var value = spreadsheet.GetCellValue("C1");
+
+        Assert.AreEqual(35.0, value); // C1 should calculate the sum of A1 and B1
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a cell with a circular dependency and expects an exception.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(CircularException))]
+    public void GetCellValue_CircularDependency_ThrowsException()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", new Formula("B1 + 1"));
+        spreadsheet.SetCellContents("B1", new Formula("A1 + 1")); // Circular dependency
+        spreadsheet.GetCellValue("A1");
+    }
+
+    /// <summary>
+    ///     Tests getting the value of a cell after clearing its contents.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_AfterClearingCell_ReturnsDefaultValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetCellContents("A1", 100.0);
+        spreadsheet.SetCellContents("A1", string.Empty); // Clear contents
+        var value = spreadsheet.GetCellValue("A1");
+
+        Assert.AreEqual(0.0, value); // Should return default value
+    }
+
+    // --- Tests for Saving and Loading ---
+
+    /// <summary>
+    ///     Tests saving a spreadsheet to a file and loading it back.
+    /// </summary>
+    //[TestMethod]
+    //public void SaveAndLoad_Spreadsheet_ReturnsIdenticalSpreadsheet()
+    //{
+    //    var spreadsheet = new Spreadsheet();
+    //    spreadsheet.SetCellContents("A1", 10.0);
+    //    spreadsheet.SetCellContents("B1", "Hello");
+
+    //    spreadsheet.Save(TestFile);
+    //    var loadedSpreadsheet = new Spreadsheet(TestFile);
+
+    //    Assert.AreEqual(10.0, loadedSpreadsheet.GetCellContents("A1"));
+    //    Assert.AreEqual("Hello", loadedSpreadsheet.GetCellContents("B1"));
+    //}
+
+    ///// <summary>
+    /////     Tests loading a spreadsheet from a non-existent file and expects an exception.
+    ///// </summary>
+    //[TestMethod]
+    //[ExpectedException(typeof(FileNotFoundException))]
+    //public void Load_NonExistentFile_ThrowsException()
+    //{
+    //    var spreadsheet = new Spreadsheet();
+    //    spreadsheet.Load("nonExistentFile.json");
+    //}
+
+    ///// <summary>
+    /////     Tests saving and loading an empty spreadsheet.
+    ///// </summary>
+    //[TestMethod]
+    //public void SaveAndLoad_EmptySpreadsheet_ReturnsEmptySpreadsheet()
+    //{
+    //    var spreadsheet = new Spreadsheet();
+    //    spreadsheet.Save(TestFile);
+    //    var loadedSpreadsheet = new Spreadsheet(TestFile);
+
+    //    Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("A1"));
+    //    Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("B1"));
+    //}
+
+    ///// <summary>
+    /////     Tests saving a spreadsheet with multiple cells and loading it back.
+    ///// </summary>
+    //[TestMethod]
+    //public void SaveAndLoad_MultipleCells_ReturnsIdenticalValues()
+    //{
+    //    var spreadsheet = new Spreadsheet();
+    //    spreadsheet.SetCellContents("A1", 5.0);
+    //    spreadsheet.SetCellContents("B1", "Test");
+    //    spreadsheet.SetCellContents("C1", new Formula("A1 + 2"));
+
+    //    spreadsheet.Save(TestFile);
+    //    var loadedSpreadsheet = new Spreadsheet(TestFile);
+
+    //    Assert.AreEqual(5.0, loadedSpreadsheet.GetCellContents("A1"));
+    //    Assert.AreEqual("Test", loadedSpreadsheet.GetCellContents("B1"));
+    //    Assert.AreEqual(new Formula("A1 + 2"), loadedSpreadsheet.GetCellContents("C1"));
+    //}
 }

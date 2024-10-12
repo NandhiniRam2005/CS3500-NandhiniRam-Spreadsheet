@@ -86,6 +86,14 @@ public class Spreadsheet
         dependencyGraph = new DependencyGraph();
     }
 
+    ///// <summary>
+    ///// Initializes a new instance of the <see cref="Spreadsheet"/> class.
+    ///// </summary>
+    ///// <param name="testFile"></param>
+    //public Spreadsheet(string testFile)
+    //{
+    //}
+
     /// <summary>
     ///   <para>
     ///     Shortcut syntax to for getting the value of the cell
@@ -123,8 +131,8 @@ public class Spreadsheet
     ///     The output JSON should look like the following.
     ///   </para>
     ///   <para>
-    ///     For example, consider a spreadsheet that contains a cell "A1" 
-    ///     with contents being the double 5.0, and a cell "B3" with contents 
+    ///     For example, consider a spreadsheet that contains a cell "A1"
+    ///     with contents being the double 5.0, and a cell "B3" with contents
     ///     being the Formula("A1+2"), and a cell "C4" with the contents "hello".
     ///   </para>
     ///   <para>
@@ -146,13 +154,13 @@ public class Spreadsheet
     ///   }
     ///   </code>
     ///   <para>
-    ///     You can achieve this by making sure your data structure is a dictionary 
+    ///     You can achieve this by making sure your data structure is a dictionary
     ///     and that the contained objects (Cells) have property named "StringForm"
-    ///     (if this name does not match your existing code, use the JsonPropertyName 
+    ///     (if this name does not match your existing code, use the JsonPropertyName
     ///     attribute).
     ///   </para>
     ///   <para>
-    ///     There can be 0 cells in the dictionary, resulting in { "Cells" : {} } 
+    ///     There can be 0 cells in the dictionary, resulting in { "Cells" : {} }.
     ///   </para>
     ///   <para>
     ///     Further, when writing the value of each cell...
@@ -174,7 +182,7 @@ public class Spreadsheet
     /// </summary>
     /// <param name="filename"> The name (with path) of the file to save to.</param>
     /// <exception cref="SpreadsheetReadWriteException">
-    ///   If there are any problems opening, writing, or closing the file, 
+    ///   If there are any problems opening, writing, or closing the file,
     ///   the method should throw a SpreadsheetReadWriteException with an
     ///   explanatory message.
     /// </exception>
@@ -211,7 +219,7 @@ public class Spreadsheet
     ///   Returns the value (as opposed to the contents) of the named cell.  The return
     ///   value's type should be either a string, a double, or a CS3500.Formula.FormulaError.
     ///   If the cell contents are a formula, the value should have already been computed
-    ///   at this point.  
+    ///   at this point.
     /// </returns>
     /// <exception cref="InvalidNameException">
     ///   If the provided name is invalid, throws an InvalidNameException.
