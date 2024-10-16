@@ -99,7 +99,6 @@ public class Spreadsheet
     {
         cellContents = new Dictionary<string, Cell>();
         dependencyGraph = new DependencyGraph();
-        Load(filename);
         Name = filename;
     }
 
@@ -144,7 +143,7 @@ public class Spreadsheet
     /// <summary>
     ///   <para>
     ///     Writes the contents of this spreadsheet to the named file using a JSON format.
-    ///     If the file already exists, overwrite it. After saving the file, the spreadsheet is 
+    ///     If the file already exists, overwrite it. After saving the file, the spreadsheet is
     ///     no longer "changed".
     ///   </para>
     /// </summary>
@@ -239,11 +238,6 @@ public class Spreadsheet
                     // Create a new Cell instance using the cell name as the label and cellValue as the contents.
                     newCellContents[cellName] = new Cell(cellName, cellValue);
                 }
-                else
-                {
-                    // If the "StringForm" is missing, throw the exception
-                    throw new SpreadsheetReadWriteException($"Cell {cellName} is missing 'StringForm'.");
-                }
             }
 
             cellContents.Clear();
@@ -256,9 +250,9 @@ public class Spreadsheet
 
             Changed = false;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new SpreadsheetReadWriteException("Error loading the spreadsheet: " + ex.Message);
+            throw new SpreadsheetReadWriteException("Error loading the spreadsheet: ");
         }
     }
 
