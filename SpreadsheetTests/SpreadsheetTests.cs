@@ -27,9 +27,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class SpreadsheetTests
 {
-    // File name used for the tests below so that it doesn't have to instantiated each time in every test.
-    private const string TestFile = "testSpreadsheet.json";
-
     // --- Tests for SetContentsOfCell method ---
 
     /// <summary>
@@ -226,7 +223,7 @@ public class SpreadsheetTests
     public void SetContentsOfCell_CheckIfEmpty_ReturnsEmptyString()
     {
         var spreadsheet = new Spreadsheet();
-        spreadsheet.SetContentsOfCell("A1","B1 + 5");
+        spreadsheet.SetContentsOfCell("A1", "B1 + 5");
         spreadsheet.SetContentsOfCell("A1", string.Empty);
 
         Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("A1"));
@@ -550,7 +547,6 @@ public class SpreadsheetTests
         Assert.AreEqual(0.0, value); // Should return default value
     }
 
-
     /// <summary>
     ///     Tests getting the value of a cell with an invalid name and expects an exception.
     /// </summary>
@@ -649,66 +645,242 @@ public class SpreadsheetTests
         var value = spreadsheet[string.Empty];
     }
 
-    // --- Tests for Saving and Loading ---
+    // --- Tests Save Method ---
 
     /// <summary>
     ///     Tests saving a spreadsheet to a file and loading it back.
     /// </summary>
-    //[TestMethod]
-    //public void SaveAndLoad_Spreadsheet_ReturnsIdenticalSpreadsheet()
-    //{
-    //    var spreadsheet = new Spreadsheet();
-    //    spreadsheet.SetContentsOfCell("A1", 10.0);
-    //    spreadsheet.SetContentsOfCell("B1", "Hello");
+    [TestMethod]
+    public void Save_Spreadsheet_ReturnsIdenticalSpreadsheet()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "10.0");
+        spreadsheet.SetContentsOfCell("B1", "Hello");
 
-    //    spreadsheet.Save(TestFile);
-    //    var loadedSpreadsheet = new Spreadsheet(TestFile);
+        spreadsheet.Save("save.txt");
+        var loadedSpreadsheet = new Spreadsheet("save.txt");
 
-    //    Assert.AreEqual(10.0, loadedSpreadsheet.GetCellContents("A1"));
-    //    Assert.AreEqual("Hello", loadedSpreadsheet.GetCellContents("B1"));
-    //}
+        Assert.AreEqual("10.0", loadedSpreadsheet.GetCellContents("A1"));
+        Assert.AreEqual("Hello", loadedSpreadsheet.GetCellContents("B1"));
+    }
 
-    ///// <summary>
-    /////     Tests loading a spreadsheet from a non-existent file and expects an exception.
-    ///// </summary>
-    //[TestMethod]
-    //[ExpectedException(typeof(FileNotFoundException))]
-    //public void Load_NonExistentFile_ThrowsException()
-    //{
-    //    var spreadsheet = new Spreadsheet();
-    //    spreadsheet.Load("nonExistentFile.json");
-    //}
+    /// <summary>
+    ///     Tests saving and loading an empty spreadsheet.
+    /// </summary>
+    [TestMethod]
+    public void Save_EmptySpreadsheet_ReturnsEmptySpreadsheet()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Save("save.txt");
+        var loadedSpreadsheet = new Spreadsheet("save.txt");
 
-    ///// <summary>
-    /////     Tests saving and loading an empty spreadsheet.
-    ///// </summary>
-    //[TestMethod]
-    //public void SaveAndLoad_EmptySpreadsheet_ReturnsEmptySpreadsheet()
-    //{
-    //    var spreadsheet = new Spreadsheet();
-    //    spreadsheet.Save(TestFile);
-    //    var loadedSpreadsheet = new Spreadsheet(TestFile);
+        Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("A1"));
+        Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("B1"));
+    }
 
-    //    Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("A1"));
-    //    Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("B1"));
-    //}
+    /// <summary>
+    /// Tests saving a spreadsheet with a formula in a cell to ensure the
+    /// formula is serialized correctly with the '=' prefix.
+    /// </summary>
+    [TestMethod]
+    public void Save_FormulaCell_SerializesCorrectly()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "5.0");
+        spreadsheet.SetContentsOfCell("B1", "=A1 + 2");
 
-    ///// <summary>
-    /////     Tests saving a spreadsheet with multiple cells and loading it back.
-    ///// </summary>
-    //[TestMethod]
-    //public void SaveAndLoad_MultipleCells_ReturnsIdenticalValues()
-    //{
-    //    var spreadsheet = new Spreadsheet();
-    //    spreadsheet.SetContentsOfCell("A1", 5.0);
-    //    spreadsheet.SetContentsOfCell("B1", "Test");
-    //    spreadsheet.SetContentsOfCell("C1", new Formula("A1 + 2"));
+        string filename = "formula_save.txt";
+        spreadsheet.Save(filename);
 
-    //    spreadsheet.Save(TestFile);
-    //    var loadedSpreadsheet = new Spreadsheet(TestFile);
+        var loadedSpreadsheet = new Spreadsheet(filename);
+        Assert.AreEqual(new Formula("A1 + 2"), loadedSpreadsheet.GetCellContents("B1"));
+    }
 
-    //    Assert.AreEqual(5.0, loadedSpreadsheet.GetCellContents("A1"));
-    //    Assert.AreEqual("Test", loadedSpreadsheet.GetCellContents("B1"));
-    //    Assert.AreEqual(new Formula("A1 + 2"), loadedSpreadsheet.GetCellContents("C1"));
-    //}
+    /// <summary>
+    /// Tests saving a spreadsheet with an unsupported content type to ensure 
+    /// it defaults to an empty string in the JSON.
+    /// </summary>
+    [TestMethod]
+    public void Save_UnsupportedContent_DefaultsToEmptyString()
+    {
+        var spreadsheet = new Spreadsheet();
+
+        spreadsheet.SetContentsOfCell("A1", string.Empty);
+        spreadsheet.Save("testSave.txt");
+
+        var loadedSpreadsheet = new Spreadsheet("testSave.txt");
+
+        Assert.AreEqual(string.Empty, loadedSpreadsheet.GetCellContents("A1"));
+    }
+
+    /// <summary>
+    ///     Tests saving a spreadsheet with multiple cells and loading it back.
+    /// </summary>
+    [TestMethod]
+    public void Save_MultipleCells_ReturnsIdenticalValues()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "5.0");
+        spreadsheet.SetContentsOfCell("B1", "Test");
+        spreadsheet.SetContentsOfCell("C1", "A1 + 2");
+
+        spreadsheet.Save("save.txt");
+        Spreadsheet loadedSpreadsheet = new Spreadsheet("save.txt");
+
+        Assert.AreEqual("5.0", loadedSpreadsheet.GetCellContents("A1"));
+        Assert.AreEqual("Test", loadedSpreadsheet.GetCellContents("B1"));
+        Assert.AreEqual(new Formula("A1 + 2"), loadedSpreadsheet.GetCellContents("C1"));
+    }
+
+    /// <summary>
+    /// Tests that an exception is thrown when saving to an invalid file path.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Save_InvalidFilePath_ThrowsSpreadsheetReadWriteException()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "Test");
+
+        spreadsheet.Save(@"C:\invalid_directory\save.txt");
+    }
+
+    // --- Tests Load Method ---
+
+    /// <summary>
+    /// Tests the behavior of loading a spreadsheet from an invalid JSON file
+    /// where a cell is missing the "StringForm" key throws exception.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Load_MissingStringFormKey_ThrowsException()
+    {
+        string invalidJson = @"
+    {
+      ""Cells"": {
+        ""A1"": { }
+      }
+    }";
+
+        string tempFileName = "save.txt";
+
+        try
+        {
+            File.WriteAllText(tempFileName, invalidJson);
+            var spreadsheet = new Spreadsheet(tempFileName);
+        }
+        catch (SpreadsheetReadWriteException ex)
+        {
+            Assert.IsTrue(ex.Message.Contains("Cell A1 is missing 'StringForm'."));
+
+            // Re-throw the exception to satisfy the [ExpectedException] attribute.
+            throw;
+        }
+    }
+    /// <summary>
+    ///     Tests loading a spreadsheet from a non-existent file and expects an exception.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Load_NonExistentFile_ThrowsException()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Load("nonExistentFile.txt");
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from a JSON file.
+    /// </summary>
+    [TestMethod]
+    public void Load_ValidJsonFile_ReturnsIdenticalValues()
+    {
+        // Arrange: Create a JSON representation of the spreadsheet.
+        string expectedOutput = @"
+    {
+        ""Cells"": {
+            ""A1"": { ""StringForm"": ""5.0"" },
+            ""B1"": { ""StringForm"": ""Test"" },
+            ""C1"": { ""StringForm"": ""A1 + 2"" }
+        }
+    }";
+
+        File.WriteAllText("known_values.txt", expectedOutput);
+
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Load("known_values.txt");
+
+        Assert.AreEqual("5.0", spreadsheet.GetCellContents("A1"));
+        Assert.AreEqual("Test", spreadsheet.GetCellContents("B1"));
+        Assert.AreEqual("A1 + 2", spreadsheet.GetCellContents("C1"));
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from an invalid format JSON file.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Load_InvalidFormatJsonFile_ThrowsException()
+    {
+        string expectedOutput = @"
+    {
+        ""Bla"": {
+            ""A1"": { ""StringForm"": ""5.0"" },
+            ""B1"": { ""StringForm"": ""Test"" },
+            ""C1"": { ""StringForm"": ""A1 + 2"" }
+        }
+    }";
+
+        File.WriteAllText("known_values.txt", expectedOutput);
+
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Load("known_values.txt");
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from a null JSON file.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Load_NullJsonFile_ThrowsException()
+    {
+        File.WriteAllText("known_values.txt", null);
+
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Load("known_values.txt");
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from an empty JSON file.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Load_EmptyJsonFile_ThrowsException()
+    {
+        string expectedOutput = string.Empty;
+
+        File.WriteAllText("known_values.txt", expectedOutput);
+
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Load("known_values.txt");
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from a a file that does not start with "Cell" throws exception.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
+    public void Load_DoesNotStartWithCell_ThrowsException()
+    {
+        string expectedOutput = @"
+    {
+        ""Bla"": {
+            ""A1"": { ""StringForm"": ""5.0""},
+        }
+    }";
+
+        File.WriteAllText("known_values.txt", expectedOutput);
+
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.Load("known_values.txt");
+    }
 }

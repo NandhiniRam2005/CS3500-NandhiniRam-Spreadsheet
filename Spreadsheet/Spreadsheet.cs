@@ -9,12 +9,14 @@
 namespace CS3500.Spreadsheet;
 
 using CS3500.Formula;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 /// <summary>
 /// Author:    Nandhini Ramanathan
 /// Partner:   None
-/// Date:      September 27,2024
+/// Date:      October 18,2024
 /// Course:    CS 3500, University of Utah, School of Computing
 /// Copyright: CS 3500 and Nandhini Ramanathan - This work may not
 ///            be copied for use in Academic Coursework.
@@ -93,12 +95,13 @@ public class Spreadsheet
     /// Initializes a new instance of the <see cref="Spreadsheet"/> class.
     /// It initializes the cell contents dictionary, the dependency graph, and creates an empty spreadsheet with the name given.
     /// </summary>
-    /// <param name="name">The name of the spreadsheet.</param>
-    public Spreadsheet(string name)
+    /// <param name="filename">The name of the spreadsheet.</param>
+    public Spreadsheet(string filename)
     {
-        Name = name;
         cellContents = new Dictionary<string, Cell>();
         dependencyGraph = new DependencyGraph();
+        Load(filename);
+        Name = filename;
     }
 
     /// <summary>
@@ -109,7 +112,7 @@ public class Spreadsheet
     /// <summary>
     /// Gets or sets a value indicating whether spreadsheet has been changed.
     /// </summary>
-    private bool Changed { get; set; } = false;
+    public bool Changed { get; set; } = false;
 
     /// <summary>
     ///   <para>
@@ -205,6 +208,45 @@ public class Spreadsheet
     /// </exception>
     public void Save(string filename)
     {
+        try
+        {
+            // Prepare a dictionary to store cell data for JSON serialization.
+            var data = new Dictionary<string, Dictionary<string, string>>();
+
+            // Iterate over each cell and convert its contents to string format.
+            foreach (var entry in cellContents)
+            {
+                string stringForm;
+                if (entry.Value.Contents is double d)
+                {
+                    stringForm = d.ToString();
+                }
+                else if (entry.Value.Contents is Formula formula)
+                {
+                    stringForm = "=" + formula.ToString();
+                }
+                else
+                {
+                    stringForm = entry.ToString();
+                }
+
+                // Store the cell's string representation in the dictionary.
+                data[entry.Key] = new Dictionary<string, string> { { "StringForm", stringForm } };
+            }
+
+            // Serialize the data to a JSON string
+            var jsonString = JsonSerializer.Serialize(new { Cells = data }, new JsonSerializerOptions { WriteIndented = true });
+
+            // Write the JSON string to the specified file.
+            File.WriteAllText(filename, jsonString);
+
+            // Mark the spreadsheet as unchanged after saving.
+            Changed = false;
+        }
+        catch (Exception)
+        {
+            throw new SpreadsheetReadWriteException("Error saving spreadsheet :(");
+        }
     }
 
     /// <summary>
@@ -224,6 +266,55 @@ public class Spreadsheet
     /// <exception cref="SpreadsheetReadWriteException"> When the file cannot be opened or the json is bad.</exception>
     public void Load(string filename)
     {
+        // Temporary dictionary to hold the new cell contents during loading.
+        var newCellContents = new Dictionary<string, Cell>();
+
+        try
+        {
+            // Read the JSON content from file then deserialize.
+            string jsonString = File.ReadAllText(filename);
+            var loadedData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonString);
+
+            // Check if the loaded data is valid and contains "Cells"
+            if (loadedData == null || !loadedData.ContainsKey("Cells"))
+            {
+                throw new SpreadsheetReadWriteException("Invalid file format.");
+            }
+
+            // Process each cell in the loaded data.
+            foreach (var cell in loadedData["Cells"].EnumerateObject())
+            {
+                string cellName = cell.Name;
+
+                // Extract the "StringForm" value from the cell data.
+                if (cell.Value.TryGetProperty("StringForm", out JsonElement stringFormElement))
+                {
+                    string cellValue = stringFormElement.GetString() ?? string.Empty;
+
+                    // Create a new Cell instance using the cell name as the label and cellValue as the contents.
+                    newCellContents[cellName] = new Cell(cellName, cellValue);
+                }
+                else
+                {
+                    // If the "StringForm" is missing, throw the exception
+                    throw new SpreadsheetReadWriteException($"Cell {cellName} is missing 'StringForm'.");
+                }
+            }
+
+            cellContents.Clear();
+
+            // Load the new cell contents into the spreadsheet.
+            foreach (var keyValuePair in newCellContents)
+            {
+                cellContents[keyValuePair.Key] = keyValuePair.Value;
+            }
+
+            Changed = false;
+        }
+        catch (Exception ex)
+        {
+            throw new SpreadsheetReadWriteException("Error loading the spreadsheet: " + ex.Message);
+        }
     }
 
     /// <summary>
