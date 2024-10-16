@@ -11,7 +11,6 @@ namespace CS3500.Spreadsheet;
 using CS3500.Formula;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using System.Threading.Channels;
 
 /// <summary>
 /// Author:    Nandhini Ramanathan
@@ -145,59 +144,8 @@ public class Spreadsheet
     /// <summary>
     ///   <para>
     ///     Writes the contents of this spreadsheet to the named file using a JSON format.
-    ///     If the file already exists, overwrite it.
-    ///   </para>
-    ///   <para>
-    ///     The output JSON should look like the following.
-    ///   </para>
-    ///   <para>
-    ///     For example, consider a spreadsheet that contains a cell "A1"
-    ///     with contents being the double 5.0, and a cell "B3" with contents
-    ///     being the Formula("A1+2"), and a cell "C4" with the contents "hello".
-    ///   </para>
-    ///   <para>
-    ///      This method would produce the following JSON string:
-    ///   </para>
-    ///   <code>
-    ///   {
-    ///     "Cells": {
-    ///       "A1": {
-    ///         "StringForm": "5"
-    ///       },
-    ///       "B3": {
-    ///         "StringForm": "=A1+2"
-    ///       },
-    ///       "C4": {
-    ///         "StringForm": "hello"
-    ///       }
-    ///     }
-    ///   }
-    ///   </code>
-    ///   <para>
-    ///     You can achieve this by making sure your data structure is a dictionary
-    ///     and that the contained objects (Cells) have property named "StringForm"
-    ///     (if this name does not match your existing code, use the JsonPropertyName
-    ///     attribute).
-    ///   </para>
-    ///   <para>
-    ///     There can be 0 cells in the dictionary, resulting in { "Cells" : {} }.
-    ///   </para>
-    ///   <para>
-    ///     Further, when writing the value of each cell...
-    ///   </para>
-    ///   <list type="bullet">
-    ///     <item>
-    ///       If the contents is a string, the value of StringForm is that string
-    ///     </item>
-    ///     <item>
-    ///       If the contents is a double d, the value of StringForm is d.ToString()
-    ///     </item>
-    ///     <item>
-    ///       If the contents is a Formula f, the value of StringForm is "=" + f.ToString()
-    ///     </item>
-    ///   </list>
-    ///   <para>
-    ///     After saving the file, the spreadsheet is no longer "changed".
+    ///     If the file already exists, overwrite it. After saving the file, the spreadsheet is 
+    ///     no longer "changed".
     ///   </para>
     /// </summary>
     /// <param name="filename"> The name (with path) of the file to save to.</param>
@@ -253,9 +201,6 @@ public class Spreadsheet
     ///   <para>
     ///     Read the data (JSON) from the file and instantiate the current
     ///     spreadsheet.  See <see cref="Save(string)"/> for expected format.
-    ///   </para>
-    ///   <para>
-    ///     Note: First deletes any current data in the spreadsheet.
     ///   </para>
     ///   <para>
     ///     Loading a spreadsheet should set changed to false.  External

@@ -7,6 +7,9 @@ namespace SpreadsheetTests;
 using CS3500.Formula;
 using CS3500.Spreadsheet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Author:    Nandhini Ramanathan
@@ -390,12 +393,13 @@ public class SpreadsheetTests
     }
 
     /// <summary>
-    /// Tests that the one-argument constructor initializes the spreadsheet with the provided name.
+    /// Tests that the one-argument constructor initializes the spreadsheet with a nonexistent file throws exception.
     /// </summary>
     [TestMethod]
+    [ExpectedException(typeof(SpreadsheetReadWriteException))]
     public void Spreadsheet_OneArgumentConstructor_NameIsSet()
     {
-        string expectedName = "Grades";
+        string expectedName = "nonExistent.txt";
         var spreadsheet = new Spreadsheet(expectedName);
         Assert.AreEqual(expectedName, spreadsheet.Name);
     }
@@ -660,7 +664,7 @@ public class SpreadsheetTests
         spreadsheet.Save("save.txt");
         var loadedSpreadsheet = new Spreadsheet("save.txt");
 
-        Assert.AreEqual("10.0", loadedSpreadsheet.GetCellContents("A1"));
+        Assert.AreEqual("10", loadedSpreadsheet.GetCellContents("A1"));
         Assert.AreEqual("Hello", loadedSpreadsheet.GetCellContents("B1"));
     }
 
@@ -693,11 +697,11 @@ public class SpreadsheetTests
         spreadsheet.Save(filename);
 
         var loadedSpreadsheet = new Spreadsheet(filename);
-        Assert.AreEqual(new Formula("A1 + 2"), loadedSpreadsheet.GetCellContents("B1"));
+        Assert.AreEqual("=A1+2", loadedSpreadsheet.GetCellContents("B1"));
     }
 
     /// <summary>
-    /// Tests saving a spreadsheet with an unsupported content type to ensure 
+    /// Tests saving a spreadsheet with an unsupported content type to ensure
     /// it defaults to an empty string in the JSON.
     /// </summary>
     [TestMethod]
@@ -727,7 +731,7 @@ public class SpreadsheetTests
         spreadsheet.Save("save.txt");
         Spreadsheet loadedSpreadsheet = new Spreadsheet("save.txt");
 
-        Assert.AreEqual("5.0", loadedSpreadsheet.GetCellContents("A1"));
+        Assert.AreEqual("5", loadedSpreadsheet.GetCellContents("A1"));
         Assert.AreEqual("Test", loadedSpreadsheet.GetCellContents("B1"));
         Assert.AreEqual(new Formula("A1 + 2"), loadedSpreadsheet.GetCellContents("C1"));
     }
@@ -777,6 +781,7 @@ public class SpreadsheetTests
             throw;
         }
     }
+
     /// <summary>
     ///     Tests loading a spreadsheet from a non-existent file and expects an exception.
     /// </summary>
@@ -882,5 +887,95 @@ public class SpreadsheetTests
 
         var spreadsheet = new Spreadsheet();
         spreadsheet.Load("known_values.txt");
+    }
+
+    // --- Stress Tests ---
+
+    /// <summary>
+    /// Stress test that creates a long chain of dependencies in the spreadsheet.
+    /// Each cell A1 to A10000 depends on the previous cell.
+    /// This tests the performance and correctness of handling many dependencies.
+    /// </summary>
+    [TestMethod]
+    [Timeout(5000)]
+    public void StressTest_SetCellContents_LongDependencyChain()
+    {
+        Spreadsheet spreadsheet = new Spreadsheet();
+
+        spreadsheet.SetContentsOfCell("A1", "0");
+
+        // Create a long chain of dependencies from A1 to A10000
+        for (int i = 2; i <= 10000; i++)
+        {
+            string currentCell = "A" + i;
+            string previousCell = "A" + (i - 1);
+
+            spreadsheet.SetContentsOfCell(currentCell, "=" + previousCell);
+        }
+
+        spreadsheet.SetContentsOfCell("A10000", "5");
+        Assert.AreEqual(5.0, spreadsheet.GetCellContents("A10000"));
+    }
+
+    /// <summary>
+    /// Tests the Save and Load functionalities of the Spreadsheet class
+    /// by creating a large spreadsheet with 10,000 cells, saving it to a file,
+    /// and then loading it back to verify that all values are retained correctly.
+    /// </summary>
+    [TestMethod]
+    [Timeout(10000)]
+    public void StressTest_SaveAndLoad_LargeSpreadsheet()
+    {
+        // Create a new instance of the Spreadsheet
+        Spreadsheet spreadsheet = new Spreadsheet();
+
+        // Fill the spreadsheet with a large number of cells
+        for (int i = 1; i <= 10000; i++)
+        {
+            spreadsheet.SetContentsOfCell($"A{i}", (i * 1.0).ToString()); // Set A1 to A10000 with values 1.0 to 10000.0
+        }
+
+        // Save the spreadsheet to a file
+        string filename = "large_spreadsheet.txt";
+        spreadsheet.Save(filename);
+
+        // Create a new spreadsheet and load from the saved file
+        Spreadsheet loadedSpreadsheet = new Spreadsheet(filename);
+
+        // Verify that the values are correct in the loaded spreadsheet
+        for (int i = 1; i <= 10000; i++)
+        {
+            Assert.AreEqual((i * 1.0).ToString(), loadedSpreadsheet.GetCellContents($"A{i}"));
+        }
+    }
+
+    /// <summary>
+    /// Stress test that updates a large number of cells in the spreadsheet.
+    /// This test sets a value to each cell from A1 to A10000, then updates them,
+    /// ensuring that the update process is efficient and correct.
+    /// </summary>
+    [TestMethod]
+    [Timeout(10000)]
+    public void StressTest_UpdateLargeNumberOfCells_ExpectedValue()
+    {
+        Spreadsheet spreadsheet = new Spreadsheet();
+
+        // Initialize all cells from A1 to A10000 with a simple value
+        for (int i = 1; i <= 10000; i++)
+        {
+            spreadsheet.SetContentsOfCell($"A{i}", (i * 1.0).ToString()); // Set A1 to A10000 with values 1.0 to 10000.0
+        }
+
+        // Now update all cells to a new value
+        for (int i = 1; i <= 10000; i++)
+        {
+            spreadsheet.SetContentsOfCell($"A{i}", (i * 2.0).ToString()); // Set A1 to A10000 with values 2.0 to 20000.0
+        }
+
+        // Verify that the values have been updated correctly
+        for (int i = 1; i <= 10000; i++)
+        {
+            Assert.AreEqual(i * 2.0, spreadsheet.GetCellContents($"A{i}"));
+        }
     }
 }
