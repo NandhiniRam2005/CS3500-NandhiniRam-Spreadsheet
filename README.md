@@ -1,11 +1,11 @@
 ```
 Author:     Nandhini Ramanathan
 Partner:    None
-Start Date: 30-Aug-2024
+Start Date: 18-Oct-2024
 Course:     CS 3505, University of Utah, School of Computing
 GitHub ID:  NandhiniRam2005
 Repo:       https://github.com/uofu-cs3500-20-fall2024/spreadsheet-NandhiniRam2005
-Commit Date: 27-Sep-2024 9:20pm
+Commit Date: 18-Oct-2024 9:20pm
 Solution:   Spreadsheet
 Copyright:  CS 3500 and Nandhini Ramanathan - This work may not be copied for use in Academic Coursework.
 ```
@@ -26,7 +26,8 @@ the Equals method have been implemented in the Formula class to define Equality 
 
 A Spreadsheet class has been added to store cell contents, managing dependencies between cells, and 
 ensuring there are no circular dependencies. It incorporated the Formula and DependencyGraph class together 
-to accomplish this.
+to accomplish this.This class also includes and indexer, and the added functionality of loading and saving
+from and to files (possible through an added one argument constructor)
 
 Future extensions include implementing a GUI for a visual element to the Spreadsheet.
 
@@ -89,5 +90,25 @@ Other Good Software Practices Achieved:
                                                                                 Effectively:      6    
                                                                                 Debugging:        1   
                                                                                 Learning tools:   1
-                                                             
+
+    5. Assignment 6: A Complete Spreadsheet Model Predicted Hours:   6        Actual Hours:   10
+
+                                                                              Hours spent -
+                                                                                Effectively:      6 
+                                                                                ( 1 hour spent ineffectively, trying to branch correctly :( )    
+                                                                                Debugging:        2   
+                                                                                Learning tools:   1
+
+ # Time Management Skill Reflection:
+
+  Throughout this course, I have gained valuable insights into my time management and estimation skills. By comparing my predicted hours to actual 
+  hours spent on various assignments, I've recognized the importance of adjusting my estimates based on the complexity of tasks. For instance, while 
+  I predicted 4 hours for Assignment 1, I actually spent 5 hours, highlighting a slight underestimation. Similarly, my prediction for Assignment 4 
+  was 8 hours, but the actual time spent was 11 hours, indicating a need to better account for debugging and unexpected challenges. I noticed that 
+  the majority of my time was spent effectively, though there were instances of debugging and learning new tools that added to the overall time 
+  commitment. For example, in Assignment 6, I dedicated 1 hour ineffectively trying to branch correctly. This experience has taught me to allocate 
+  additional buffer time for unforeseen issues, leading to more accurate predictions in future projects and enhancing my overall productivity. I also
+  learned that thinking about how much time a task will take me makes me more aware of how much time I take when doing an assignment, especially
+  times when I'm actually locked in and other times that are spent very ineffectively. Thinking about my time management makes me a better software
+  developer that's aware of my capabilities and shows my improvement as a programmer.
                                                              
