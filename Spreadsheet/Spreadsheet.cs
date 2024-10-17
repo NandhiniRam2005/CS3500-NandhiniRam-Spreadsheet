@@ -237,15 +237,15 @@ public class Spreadsheet
                         // Parse the formula (excluding the '=' prefix).
                         string formulaString = cellValue.Substring(1);
                         var formula = new Formula(formulaString);
-                        newCellContents[cellName] = new Cell(cellName, formula);
+                        newCellContents[cellName] = new Cell(formula);
                     }
                     else if (double.TryParse(cellValue, out double number))
                     {
-                        newCellContents[cellName] = new Cell(cellName, number);
+                        newCellContents[cellName] = new Cell(number);
                     }
                     else
                     {
-                        newCellContents[cellName] = new Cell(cellName, cellValue);
+                        newCellContents[cellName] = new Cell(cellValue);
                     }
                 }
             }
@@ -599,7 +599,7 @@ public class Spreadsheet
             }
 
             // Set the new content in the cell
-            cellContents[name] = new Cell(name, content);
+            cellContents[name] = new Cell(content);
 
             // Return a list of cells that need to be recalculated
             return GetCellsToRecalculate(name).ToList();
@@ -694,18 +694,11 @@ public class Spreadsheet
 internal class Cell
 {
     /// <summary>
-    /// The name of the cell, letter/s followed by number/s.
-    /// </summary>
-    private readonly string name;
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="Cell"/> class.
     /// </summary>
-    /// <param name="label">The label/name of the cell.</param>
     /// <param name="contents">The contents of the cell.</param>
-    public Cell(string label, object contents)
+    public Cell(object contents)
     {
-        name = label;
         Contents = contents;
     }
 
