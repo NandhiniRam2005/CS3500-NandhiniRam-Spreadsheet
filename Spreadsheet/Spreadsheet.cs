@@ -380,7 +380,7 @@ public class Spreadsheet
         Formula formulaContent = new Formula(content.Substring(1));
         result = SetCellContents(name, formulaContent);
         }
-        else // Otherwise, treat it as plain text.
+        else
         {
             result = SetCellContents(name, content);
         }
