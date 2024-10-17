@@ -2,6 +2,10 @@
 //   Copyright (c) 2024 UofU-CS3500. All rights reserved.
 // </copyright>
 
+namespace CS3500.Formula;
+
+using CS3500.Formula;
+
 /// <summary>
 /// Author:    Nandhini Ramanathan
 /// Partner:   None
@@ -19,10 +23,6 @@
 ///    This file contains MS unit tests for the formula class. It tests the three main public methods:
 ///    Formula Constructor, GetVariables, and ToString, along with implicitly testing the private helper methods.
 /// </summary>
-
-namespace CS3500.Formula;
-
-using CS3500.Formula;
 
 /// <summary>
 ///   <para>

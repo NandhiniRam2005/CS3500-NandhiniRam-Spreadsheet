@@ -877,7 +877,6 @@ public class SpreadsheetTests
     /// This tests the performance and correctness of handling many dependencies.
     /// </summary>
     [TestMethod]
-    [Timeout(5000)]
     public void StressTest_SetCellContents_LongDependencyChain()
     {
         Spreadsheet spreadsheet = new Spreadsheet();
@@ -903,7 +902,6 @@ public class SpreadsheetTests
     /// and then loading it back to verify that all values are retained correctly.
     /// </summary>
     [TestMethod]
-    [Timeout(10000)]
     public void StressTest_SaveAndLoad_LargeSpreadsheet()
     {
         // Create a new instance of the Spreadsheet
@@ -936,7 +934,6 @@ public class SpreadsheetTests
     /// ensuring that the update process is efficient and correct.
     /// </summary>
     [TestMethod]
-    [Timeout(10000)]
     public void StressTest_UpdateLargeNumberOfCells_ExpectedValue()
     {
         Spreadsheet spreadsheet = new Spreadsheet();

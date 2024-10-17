@@ -683,7 +683,7 @@ public class Spreadsheet
             }
         }
 
-        // Add the current cell to the front of the changed list, indicating it needsto be recalculated.
+        // Add the current cell to the front of the changed list, indicating it needs to be recalculated.
         changed.AddFirst(name);
     }
 }

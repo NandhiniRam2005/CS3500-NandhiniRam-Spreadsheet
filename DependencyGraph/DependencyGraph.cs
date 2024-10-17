@@ -8,7 +8,6 @@
 // (Clarified meaning of dependent and dependee.)
 // (Clarified names in solution/project structure.)
 
-
 namespace CS3500;
 
 /// <summary>
@@ -273,10 +272,5 @@ public class DependencyGraph
         {
             AddDependency(dependee, nodeName);
         }
-    }
-
-    public void Clear()
-    {
-        throw new NotImplementedException();
     }
 }
