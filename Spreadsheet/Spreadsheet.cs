@@ -693,6 +693,9 @@ public class Spreadsheet
 /// </summary>
 internal class Cell
 {
+    /// <summary>
+    /// The name of the cell, letter/s followed by number/s.
+    /// </summary>
     private readonly string name;
 
     /// <summary>
