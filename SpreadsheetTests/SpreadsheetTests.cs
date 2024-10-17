@@ -7,9 +7,6 @@ namespace SpreadsheetTests;
 using CS3500.Formula;
 using CS3500.Spreadsheet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Author:    Nandhini Ramanathan
@@ -446,7 +443,7 @@ public class SpreadsheetTests
 
         Assert.AreEqual(10.0, spreadsheet.GetCellContents("A1"));
         Assert.AreEqual("Text", spreadsheet.GetCellContents("B1"));
-        Assert.AreEqual(new Formula("A1 + 5"), spreadsheet.GetCellContents("C1"));
+        Assert.AreEqual(15.0, spreadsheet.GetCellValue("C1"));
         Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("D1"));
     }
 
@@ -463,6 +460,18 @@ public class SpreadsheetTests
         var value = spreadsheet.GetCellValue("A1");
 
         Assert.AreEqual(42.0, value);
+    }
+
+    /// <summary>
+    ///     Tests that looking up an invalid cell name throws expected exception.
+    /// </summary>
+    [TestMethod]
+    [ExpectedException(typeof(InvalidNameException))]
+    public void GetCellValue_InvalidCellName_ThrowsException()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("R6", "=S3+1");
+        var value = spreadsheet.GetCellValue("R6");
     }
 
     /// <summary>
@@ -518,11 +527,10 @@ public class SpreadsheetTests
     ///     Tests getting the value of a cell with a circular dependency and expects an exception.
     /// </summary>
     [TestMethod]
-    [ExpectedException(typeof(InvalidNameException))]
     public void GetCellValue_CellNotInDictionary_Exception()
     {
         var spreadsheet = new Spreadsheet();
-        spreadsheet.GetCellValue("k345");
+        Assert.AreEqual(string.Empty, spreadsheet.GetCellValue("k345"));
     }
 
     /// <summary>
@@ -544,7 +552,7 @@ public class SpreadsheetTests
     /// </summary>
     [TestMethod]
     [ExpectedException(typeof(InvalidNameException))]
-    public void GetCellValue_InvalidCellName_ThrowsException()
+    public void GetCellValue_InvalidCellNameWord_ThrowsException()
     {
         var spreadsheet = new Spreadsheet();
         spreadsheet.GetCellValue("InvalidCell");
@@ -563,6 +571,21 @@ public class SpreadsheetTests
         var value = spreadsheet.GetCellValue("C1");
 
         Assert.AreEqual(35.0, value); // C1 should calculate the sum of A1 and B1
+    }
+
+    /// <summary>
+    ///     Test to check is cell reevaluates after an update.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_CellReevaluate_ReturnsCalculatedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "10.0");
+        spreadsheet.SetContentsOfCell("B1", "=A1+3");
+        spreadsheet.SetContentsOfCell("A1", "4.0");
+        var value = spreadsheet.GetCellValue("B1");
+
+        Assert.AreEqual(7.0, value);
     }
 
     /// <summary>
@@ -686,7 +709,7 @@ public class SpreadsheetTests
         var loadedSpreadsheet = new Spreadsheet(filename);
         loadedSpreadsheet.Load(filename);
 
-        Assert.AreEqual("=A1+2", loadedSpreadsheet.GetCellContents("B1"));
+        Assert.AreEqual(7.0, loadedSpreadsheet.GetCellValue("B1"));
     }
 
     /// <summary>
@@ -762,7 +785,7 @@ public class SpreadsheetTests
         ""Cells"": {
             ""A1"": { ""StringForm"": ""5.0"" },
             ""B1"": { ""StringForm"": ""Test"" },
-            ""C1"": { ""StringForm"": ""A1 + 2"" }
+            ""C1"": { ""StringForm"": ""=A1 + 2"" }
         }
     }";
 
@@ -771,9 +794,9 @@ public class SpreadsheetTests
         var spreadsheet = new Spreadsheet();
         spreadsheet.Load("known_values.txt");
 
-        Assert.AreEqual("5.0", spreadsheet.GetCellContents("A1"));
-        Assert.AreEqual("Test", spreadsheet.GetCellContents("B1"));
-        Assert.AreEqual("A1 + 2", spreadsheet.GetCellContents("C1"));
+        Assert.AreEqual(5.0, spreadsheet.GetCellValue("A1"));
+        Assert.AreEqual("Test", spreadsheet.GetCellValue("B1"));
+        Assert.AreEqual(7.0, spreadsheet.GetCellValue("C1"));
     }
 
     /// <summary>
@@ -903,7 +926,7 @@ public class SpreadsheetTests
         // Verify that the values are correct in the loaded spreadsheet
         for (int i = 1; i <= 10000; i++)
         {
-            Assert.AreEqual((i * 1.0).ToString(), loadedSpreadsheet.GetCellContents($"A{i}"));
+            Assert.AreEqual( i * 1.0, loadedSpreadsheet.GetCellContents($"A{i}"));
         }
     }
 

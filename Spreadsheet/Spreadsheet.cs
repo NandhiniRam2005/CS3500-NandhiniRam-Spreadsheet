@@ -210,42 +210,51 @@ public class Spreadsheet
     /// <exception cref="SpreadsheetReadWriteException"> When the file cannot be opened or the json is bad.</exception>
     public void Load(string filename)
     {
-        // Temporary dictionary to hold the new cell contents during loading.
         var newCellContents = new Dictionary<string, Cell>();
 
         try
         {
-            // Read the JSON content from file then deserialize.
+            // Read the JSON content from file and deserialize.
             string jsonString = File.ReadAllText(filename);
             var loadedData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonString);
 
-            // Check if the loaded data is valid and contains "Cells"
             if (loadedData == null || !loadedData.ContainsKey("Cells"))
             {
                 throw new SpreadsheetReadWriteException("Invalid file format.");
             }
 
-            // Process each cell in the loaded data.
             foreach (var cell in loadedData["Cells"].EnumerateObject())
             {
                 string cellName = cell.Name;
 
-                // Extract the "StringForm" value from the cell data.
                 if (cell.Value.TryGetProperty("StringForm", out JsonElement stringFormElement))
                 {
                     string cellValue = stringFormElement.GetString() ?? string.Empty;
 
-                    // Create a new Cell instance using the cell name as the label and cellValue as the contents.
-                    newCellContents[cellName] = new Cell(cellName, cellValue);
+                    // Check if the value starts with '=' to identify a formula.
+                    if (cellValue.StartsWith("="))
+                    {
+                        // Parse the formula (excluding the '=' prefix).
+                        string formulaString = cellValue.Substring(1);
+                        var formula = new Formula(formulaString);
+                        newCellContents[cellName] = new Cell(cellName, formula);
+                    }
+                    else if (double.TryParse(cellValue, out double number))
+                    {
+                        newCellContents[cellName] = new Cell(cellName, number);
+                    }
+                    else
+                    {
+                        newCellContents[cellName] = new Cell(cellName, cellValue);
+                    }
                 }
             }
 
+            // Clear the current contents and load the new ones.
             cellContents.Clear();
-
-            // Load the new cell contents into the spreadsheet.
-            foreach (var keyValuePair in newCellContents)
+            foreach (var kvp in newCellContents)
             {
-                cellContents[keyValuePair.Key] = keyValuePair.Value;
+                cellContents[kvp.Key] = kvp.Value;
             }
 
             Changed = false;
@@ -281,10 +290,16 @@ public class Spreadsheet
         // Check if the cell exists in the dictionary
         if (!cellContents.TryGetValue(cellName, out var cell))
         {
-            throw new InvalidNameException();
+            return string.Empty; // Return empty if the cell doesn't exist
         }
 
-        // Return the computed value of the cell
+        // Check if the content is a Formula
+        if (cell.Contents is Formula formula)
+        {
+            return formula.Evaluate(Lookup);
+        }
+
+        // If it's not a formula, just return the content directly
         return cell.Contents;
     }
 
@@ -362,16 +377,8 @@ public class Spreadsheet
         }
         else if (content.StartsWith("=")) // Try interpreting the string as a formula.
         {
-            try
-            {
-                Formula formulaContent = new Formula(content.Substring(1));  // Remove the '=' when parsing as a formula.
-                result = SetCellContents(name, formulaContent);
-            }
-            catch (FormulaFormatException)
-            {
-                // Handle invalid formula format
-                throw new FormulaFormatException("Invalid formula format");
-            }
+        Formula formulaContent = new Formula(content.Substring(1));  // Remove the '=' when parsing as a formula.
+        result = SetCellContents(name, formulaContent);
         }
         else // Otherwise, treat it as plain text.
         {
@@ -432,6 +439,22 @@ public class Spreadsheet
         {
             return string.Empty;
         }
+    }
+
+    /// <summary>
+    /// Private lookup delegate to be passed into the Evaluate Method to evaluate formulas.
+    /// </summary>
+    /// <param name="name">the name of the cell to be looked up.</param>
+    /// <returns>Returns the value of the cell if it exists.</returns>
+    /// <exception cref="InvalidNameException">Exception if the value of the cell doe not exist.</exception>
+    private double Lookup(string name)
+    {
+        if (cellContents.TryGetValue(name, out var cell) && cell.Contents is double number)
+        {
+            return number;
+        }
+
+        throw new InvalidNameException();
     }
 
     /// <summary>
