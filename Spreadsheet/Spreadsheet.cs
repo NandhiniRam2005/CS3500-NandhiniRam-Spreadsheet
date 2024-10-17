@@ -375,9 +375,9 @@ public class Spreadsheet
             // If it's a valid double, call the SetCellContents method for double.
             result = SetCellContents(name, numberContent);
         }
-        else if (content.StartsWith("=")) // Try interpreting the string as a formula.
+        else if (content.StartsWith("="))
         {
-        Formula formulaContent = new Formula(content.Substring(1));  // Remove the '=' when parsing as a formula.
+        Formula formulaContent = new Formula(content.Substring(1));
         result = SetCellContents(name, formulaContent);
         }
         else // Otherwise, treat it as plain text.
