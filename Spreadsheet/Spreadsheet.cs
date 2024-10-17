@@ -290,7 +290,7 @@ public class Spreadsheet
         // Check if the cell exists in the dictionary
         if (!cellContents.TryGetValue(cellName, out var cell))
         {
-            return string.Empty; // Return empty if the cell doesn't exist
+            return string.Empty;
         }
 
         // Check if the content is a Formula
