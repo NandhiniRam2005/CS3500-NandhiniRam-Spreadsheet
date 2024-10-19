@@ -779,7 +779,6 @@ public class SpreadsheetTests
     [TestMethod]
     public void Load_ValidJsonFile_ReturnsIdenticalValues()
     {
-        // Arrange: Create a JSON representation of the spreadsheet.
         string expectedOutput = @"
     {
         ""Cells"": {

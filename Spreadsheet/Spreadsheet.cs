@@ -234,7 +234,7 @@ public class Spreadsheet
                     // Check if the value starts with '=' to identify a formula.
                     if (cellValue.StartsWith("="))
                     {
-                        // Parse the formula (excluding the '=' prefix).
+                        // Parse the formula (excluding the '=').
                         string formulaString = cellValue.Substring(1);
                         var formula = new Formula(formulaString);
                         newCellContents[cellName] = new Cell(formula);
@@ -293,13 +293,11 @@ public class Spreadsheet
             return string.Empty;
         }
 
-        // Check if the content is a Formula
         if (cell.Contents is Formula formula)
         {
             return formula.Evaluate(Lookup);
         }
 
-        // If it's not a formula, just return the content directly
         return cell.Contents;
     }
 
@@ -543,7 +541,6 @@ public class Spreadsheet
     /// <returns>True if valid, otherwise false.</returns>
     private bool IsValidCellName(string name)
     {
-        // Check if the name is not null or empty.
         if (string.IsNullOrEmpty(name))
         {
             return false;
@@ -552,7 +549,6 @@ public class Spreadsheet
         // Define the regex pattern for a valid cell name (from the Formula class)
         string cellNamePattern = @"^[a-zA-Z]+[0-9]+$";
 
-        // Check if the name matches the regex pattern.
         return Regex.IsMatch(name, cellNamePattern);
     }
 
@@ -589,7 +585,6 @@ public class Spreadsheet
             // If it's a formula, validate for circular dependencies
             if (content is Formula formula)
             {
-                // Temporarily set the formula's variables as dependees for the cell
                 dependencyGraph.ReplaceDependees(name, formula.GetVariables());
             }
             else
@@ -598,7 +593,6 @@ public class Spreadsheet
                 dependencyGraph.ReplaceDependees(name, new HashSet<string>());
             }
 
-            // Set the new content in the cell
             cellContents[name] = new Cell(content);
 
             // Return a list of cells that need to be recalculated
@@ -664,10 +658,8 @@ public class Spreadsheet
     /// <exception cref="CircularException">Thrown when a circular dependency is detected.</exception>
     private void Visit(string start, string name, ISet<string> visited, LinkedList<string> changed)
     {
-        // Mark the current cell as visited.
         visited.Add(name);
 
-        // Iterate over all direct dependents of the current cell.
         foreach (string dependent in GetDirectDependents(name))
         {
             // Check for circular dependency by seeing if the dependent is the starting cell.
