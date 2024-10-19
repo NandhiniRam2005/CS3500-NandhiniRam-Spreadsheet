@@ -757,7 +757,7 @@ public class SpreadsheetTests
         var spreadsheet = new Spreadsheet();
         spreadsheet.SetContentsOfCell("A1", "Test");
 
-        spreadsheet.Save(@"C:\invalid_directory\save.txt");
+        spreadsheet.Save(@"C:/invalid_dir.ectory//save.txt");
     }
 
     // --- Tests Load Method ---
