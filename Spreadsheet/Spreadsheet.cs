@@ -237,7 +237,7 @@ public class Spreadsheet
                         var formula = new Formula(formulaString);
                         newCell.StringCellContents = "=" + formulaString;
                         newCell.Contents = formula;
-                        newCell.Value = 0;
+                        newCell.Value = GetCellValue(cellValue);
                     }
                     else if (double.TryParse(cellValue, out double number))
                     {
@@ -249,7 +249,7 @@ public class Spreadsheet
                     {
                         newCell.StringCellContents = cellValue;
                         newCell.Contents = cellValue;
-                        newCell.Value = 0;
+                        newCell.Value = GetCellValue(cell.ToString());
                     }
 
                     newCellContents[cellName] = newCell;
@@ -764,7 +764,7 @@ internal class Cell
     public Cell(string contents)
     {
         stringCellContents = contents;
-        Value = 0;
+        Value = string.Empty;
 
         if (double.TryParse(stringCellContents, out double doubleValue))
         {
