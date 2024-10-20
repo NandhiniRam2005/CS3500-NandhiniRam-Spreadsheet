@@ -214,7 +214,7 @@ public class Spreadsheet
 
         try
         {
-            // Read the JSON content from file and deserialize.
+            // Read the JSON content from the file and deserialize it.
             string jsonString = File.ReadAllText(filename);
             var loadedData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonString);
 
@@ -223,30 +223,17 @@ public class Spreadsheet
                 throw new SpreadsheetReadWriteException("Invalid file format.");
             }
 
+            // Iterate through the cells in the loaded data.
             foreach (var cell in loadedData["Cells"].EnumerateObject())
             {
                 string cellName = cell.Name;
 
                 if (cell.Value.TryGetProperty("StringForm", out JsonElement stringFormElement))
                 {
-                    string cellValue = stringFormElement.GetString() ?? string.Empty;
+                    string cellContent = stringFormElement.GetString() ?? string.Empty;
 
-                    // Check if the value starts with '=' to identify a formula.
-                    if (cellValue.StartsWith("="))
-                    {
-                        // Parse the formula (excluding the '=').
-                        string formulaString = cellValue.Substring(1);
-                        var formula = new Formula(formulaString);
-                        newCellContents[cellName] = new Cell(formula);
-                    }
-                    else if (double.TryParse(cellValue, out double number))
-                    {
-                        newCellContents[cellName] = new Cell(number);
-                    }
-                    else
-                    {
-                        newCellContents[cellName] = new Cell(cellValue);
-                    }
+                    // Create a new Cell object using the content directly.
+                    newCellContents[cellName] = new Cell(cellContent);
                 }
             }
 
@@ -261,7 +248,7 @@ public class Spreadsheet
         }
         catch (Exception)
         {
-            throw new SpreadsheetReadWriteException("Error loading the spreadsheet: ");
+            throw new SpreadsheetReadWriteException("Error loading the spreadsheet.");
         }
     }
 
@@ -287,18 +274,12 @@ public class Spreadsheet
             throw new InvalidNameException();
         }
 
-        // Check if the cell exists in the dictionary
         if (!cellContents.TryGetValue(cellName, out var cell))
         {
             return string.Empty;
         }
 
-        if (cell.Contents is Formula formula)
-        {
-            return formula.Evaluate(Lookup);
-        }
-
-        return cell.Contents;
+        return cellContents[cellName].Value;
     }
 
     /// <summary>
@@ -370,22 +351,19 @@ public class Spreadsheet
         IList<string> result;
         if (double.TryParse(content, out double numberContent))
         {
-            // If it's a valid double, call the SetCellContents method for double.
             result = SetCellContents(name, numberContent);
         }
         else if (content.StartsWith("="))
         {
-        Formula formulaContent = new Formula(content.Substring(1));
-        result = SetCellContents(name, formulaContent);
+            Formula formulaContent = new Formula(content.Substring(1));
+            result = SetCellContents(name, formulaContent);
         }
         else
         {
             result = SetCellContents(name, content);
         }
 
-        // If the contents were successfully set, mark the spreadsheet as changed.
         Changed = true;
-
         return result;
     }
 
@@ -437,22 +415,6 @@ public class Spreadsheet
         {
             return string.Empty;
         }
-    }
-
-    /// <summary>
-    /// Private lookup delegate to be passed into the Evaluate Method to evaluate formulas.
-    /// </summary>
-    /// <param name="name">the name of the cell to be looked up.</param>
-    /// <returns>Returns the value of the cell if it exists.</returns>
-    /// <exception cref="InvalidNameException">Exception if the value of the cell doe not exist.</exception>
-    private double Lookup(string name)
-    {
-        if (cellContents.TryGetValue(name, out var cell) && cell.Contents is double number)
-        {
-            return number;
-        }
-
-        throw new InvalidNameException();
     }
 
     /// <summary>
@@ -578,37 +540,46 @@ public class Spreadsheet
         }
 
         // Backup the original dependents
-        HashSet<string> originalDependents = new HashSet<string>(dependencyGraph.GetDependees(name));
+        HashSet<string> originalDependees = new HashSet<string>(dependencyGraph.GetDependees(name));
 
         try
         {
-            // If it's a formula, validate for circular dependencies
+            // Handle formulas by adding new dependencies.
             if (content is Formula formula)
             {
                 dependencyGraph.ReplaceDependees(name, formula.GetVariables());
+                cellContents[name] = new Cell("=" + formula.ToString());
             }
             else
             {
-                // If it's not a formula, remove any existing dependees for the cell
+                // Clear dependees if it's not a formula.
                 dependencyGraph.ReplaceDependees(name, new HashSet<string>());
+                cellContents[name] = new Cell(content.ToString());
             }
 
-            cellContents[name] = new Cell(content);
+            // Recompute the values of all dependent cells.
+            List<string> cellsToReevaluate = GetCellsToRecalculate(name).ToList();
 
-            // Return a list of cells that need to be recalculated
-            return GetCellsToRecalculate(name).ToList();
+            for (int i = 1; i < cellsToReevaluate.Count; i++)
+            {
+                cellContents[cellsToReevaluate[i]].EvaluateValue(this);
+            }
+
+            // Return the list of cells that need to be recalculated.
+            return cellsToReevaluate;
         }
         catch (CircularException)
         {
-            // Revert content and dependencies on circular dependency
+            // Revert content to the original if a circular dependency is found.
             if (cellContents.ContainsKey(name))
             {
-                cellContents[name].Contents = originalContent;
+                cellContents[name] = new Cell(originalContent.ToString());
             }
 
-            // Restore the original dependents
-            dependencyGraph.ReplaceDependees(name, originalDependents);
+            // Restore original dependees to prevent inconsistency.
+            dependencyGraph.ReplaceDependees(name, originalDependees);
 
+            // Rethrow the exception to handle it upstream.
             throw;
         }
     }
@@ -632,16 +603,11 @@ public class Spreadsheet
     /// </returns>
     private IEnumerable<string> GetCellsToRecalculate(string name)
     {
-        // Initialize a linked list to keep track of cells that need to be recalculated.
         LinkedList<string> changed = new();
-
-        // Initialize a hash set to track visited cells and prevent infinite loops.
         HashSet<string> visited = [];
 
-        // Start the depth-first search to visit all dependent cells.
+        // Recursively search to visit all dependent cells.
         Visit(name, name, visited, changed);
-
-        // Return the list of cells that need to be recalculated, in the correct order.
         return changed;
     }
 
@@ -686,18 +652,71 @@ public class Spreadsheet
 internal class Cell
 {
     /// <summary>
+    /// The string value of the cell object for example the formula (2+2) should have a string value of "=2+2".
+    /// </summary>
+    private string stringCellContents;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="Cell"/> class.
     /// </summary>
     /// <param name="contents">The contents of the cell.</param>
-    public Cell(object contents)
+    public Cell(string contents)
     {
-        Contents = contents;
+        stringCellContents = contents;
+        Value = 0;
+
+        if (double.TryParse(stringCellContents, out double doubleValue))
+        {
+            Value = doubleValue;
+            Contents = doubleValue;
+        }
+        else if (stringCellContents.StartsWith("="))
+        {
+            Formula formula = new Formula(stringCellContents.Substring(1));
+            Contents = formula;
+        }
+        else
+        {
+            Value = stringCellContents;
+            Contents = stringCellContents;
+        }
     }
 
     /// <summary>
-    /// Gets or sets the contents of the cell.
+    /// Gets the contents of the cell.
     /// </summary>
-    public object Contents { get; set; }
+    public object Contents { get; private set; }
+
+    /// <summary>
+    /// Gets the Value of the cell.
+    /// </summary>
+    public object Value { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the string contents of the cell.
+    /// </summary>
+    public string StringCellContents { get => stringCellContents; set => stringCellContents = value; }
+
+    /// <summary>
+    /// Evaluates the Value of a cell, looking the variable up and computing it and storing it into the cell object.
+    /// </summary>
+    /// <param name="spreadsheet">The spreadsheet it is referencing when evaluating the cell.</param>
+    /// <exception cref="ArgumentException">Argument Exception thrown if cells cannot be added together.</exception>
+    public void EvaluateValue(Spreadsheet spreadsheet)
+    {
+        double GetVariableValue(string variable)
+        {
+            if (spreadsheet[variable] is double value)
+            {
+                return value;
+            }
+
+            throw new ArgumentException("Cannot add two objects that aren't numbers.");
+        }
+
+        Formula formula = new Formula(stringCellContents.Substring(1));
+        Value = formula.Evaluate(GetVariableValue);
+    }
 }
 
 /// <summary>

@@ -7,6 +7,7 @@ namespace SpreadsheetTests;
 using CS3500.Formula;
 using CS3500.Spreadsheet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Text;
 
 /// <summary>
 /// Author:    Nandhini Ramanathan
@@ -463,18 +464,6 @@ public class SpreadsheetTests
     }
 
     /// <summary>
-    ///     Tests that looking up an invalid cell name throws expected exception.
-    /// </summary>
-    [TestMethod]
-    [ExpectedException(typeof(InvalidNameException))]
-    public void GetCellValue_InvalidCellName_ThrowsException()
-    {
-        var spreadsheet = new Spreadsheet();
-        spreadsheet.SetContentsOfCell("R6", "=S3+1");
-        var value = spreadsheet.GetCellValue("R6");
-    }
-
-    /// <summary>
     ///     Tests getting the value of a cell containing text.
     /// </summary>
     [TestMethod]
@@ -582,10 +571,40 @@ public class SpreadsheetTests
         var spreadsheet = new Spreadsheet();
         spreadsheet.SetContentsOfCell("A1", "10.0");
         spreadsheet.SetContentsOfCell("B1", "=A1+3");
-        spreadsheet.SetContentsOfCell("A1", "4.0");
         var value = spreadsheet.GetCellValue("B1");
 
-        Assert.AreEqual(7.0, value);
+        Assert.AreEqual(13.0, value);
+    }
+
+    /// <summary>
+    ///     Test to check is cell reevaluates after an update.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_ReevaluateChain_ReturnsCalculatedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "10.0");
+        spreadsheet.SetContentsOfCell("B1", "=A1+3");
+        spreadsheet.SetContentsOfCell("C1", "=B1+4.0");
+
+        Assert.AreEqual(13.0, spreadsheet.GetCellValue("B1"));
+        Assert.AreEqual(17.0, spreadsheet.GetCellValue("C1"));
+    }
+
+    /// <summary>
+    ///     Test to check is cell reevaluates after an update.
+    /// </summary>
+    [TestMethod]
+    public void GetCellValue_ReevaluateChainRestOriginalCellValue_ReturnsCalculatedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "10.0");
+        spreadsheet.SetContentsOfCell("B1", "=A1+3");
+        spreadsheet.SetContentsOfCell("C1", "=B1+4.0");
+        spreadsheet.SetContentsOfCell("A1", "1.0");
+
+        Assert.AreEqual(4.0, spreadsheet.GetCellValue("B1"));
+        Assert.AreEqual(8.0, spreadsheet.GetCellValue("C1"));
     }
 
     /// <summary>
