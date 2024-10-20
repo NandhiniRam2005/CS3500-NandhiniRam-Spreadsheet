@@ -495,7 +495,6 @@ public class SpreadsheetTests
         Assert.IsInstanceOfType(spreadsheet.GetCellValue("A1"), typeof(string));
     }
 
-
     // --- Tests for GetCellValue method With SetCellContents Method ---
 
     /// <summary>
