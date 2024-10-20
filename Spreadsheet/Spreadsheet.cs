@@ -9,7 +9,7 @@
 namespace CS3500.Spreadsheet;
 
 using CS3500.Formula;
-using System.Text.Json;
+using System;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -72,12 +72,12 @@ public class Spreadsheet
     /// <summary>
     /// A dictionary to hold cell contents by its names.
     /// </summary>
-    private readonly Dictionary<string, Cell> cellContents;
+    private Dictionary<string, Cell> cellContents;
 
     /// <summary>
     /// An instance of the DependencyGraph to manage cell dependencies.
     /// </summary>
-    private readonly DependencyGraph dependencyGraph;
+    private DependencyGraph dependencyGraph;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="Spreadsheet"/> class.
@@ -129,14 +129,14 @@ public class Spreadsheet
     {
         get
         {
-            // Validate the cell name
-            if (string.IsNullOrWhiteSpace(cellName) || !IsValidCellName(cellName))
+            var normalizedVariable = cellName.ToUpper();
+
+            if (string.IsNullOrWhiteSpace(normalizedVariable.ToUpper()) || !IsValidCellName(normalizedVariable.ToUpper()))
             {
                 throw new InvalidNameException();
             }
 
-            // Retrieve the cell value using the existing method
-            return GetCellValue(cellName);
+            return GetCellValue(normalizedVariable.ToUpper());
         }
     }
 
@@ -157,43 +157,15 @@ public class Spreadsheet
     {
         try
         {
-            // Prepare a dictionary to store cell data for JSON serialization.
-            var data = new Dictionary<string, Dictionary<string, string>>();
-
-            // Iterate over each cell and convert its contents to string format.
-            foreach (var entry in cellContents)
-            {
-                string stringForm;
-                if (entry.Value.Contents is double d)
-                {
-                    stringForm = d.ToString();
-                }
-                else if (entry.Value.Contents is Formula formula)
-                {
-                    stringForm = "=" + formula.ToString();
-                }
-                else
-                {
-                    stringForm = entry.ToString();
-                }
-
-                // Store the cell's string representation in the dictionary.
-                data[entry.Key] = new Dictionary<string, string> { { "StringForm", stringForm } };
-            }
-
-            // Serialize the data to a JSON string
-            var jsonString = JsonSerializer.Serialize(new { Cells = data }, new JsonSerializerOptions { WriteIndented = true });
-
-            // Write the JSON string to the specified file.
-            File.WriteAllText(filename, jsonString);
-
-            // Mark the spreadsheet as unchanged after saving.
-            Changed = false;
+            string jsonResultText = System.Text.Json.JsonSerializer.Serialize(this);
+            File.WriteAllText(filename, jsonResultText);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            throw new SpreadsheetReadWriteException("Error saving spreadsheet :(");
+            throw new SpreadsheetReadWriteException($"Saving to spreadsheet caused a {exception} exception.");
         }
+
+        Changed = false;
     }
 
     /// <summary>
@@ -210,64 +182,49 @@ public class Spreadsheet
     /// <exception cref="SpreadsheetReadWriteException"> When the file cannot be opened or the json is bad.</exception>
     public void Load(string filename)
     {
-        var newCellContents = new Dictionary<string, Cell>();
+        var originalContent = new Dictionary<string, Cell>(cellContents);
+        dependencyGraph = new DependencyGraph();
+        cellContents.Clear();
 
         try
         {
-            string jsonString = File.ReadAllText(filename);
-            var loadedData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonString);
+            // Try reading the Json File.
+            var jsonContent = File.ReadAllText(filename);
+            var deserializedData = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>(jsonContent);
 
-            if (loadedData == null || !loadedData.ContainsKey("Cells"))
+            if (deserializedData == null || !deserializedData.ContainsKey("Cells"))
             {
-                throw new SpreadsheetReadWriteException("Invalid file format.");
+                throw new SpreadsheetReadWriteException("File not in a valid format.");
             }
 
-            foreach (var cell in loadedData["Cells"].EnumerateObject())
+            // Populate cells from deserialized data.
+            foreach (var entry in deserializedData["Cells"])
             {
-                string cellName = cell.Name;
+                string cellName = entry.Key;
+                string stringForm = entry.Value["StringForm"];
 
-                if (cell.Value.TryGetProperty("StringForm", out JsonElement stringFormElement))
+                if (double.TryParse(stringForm, out double numericValue))
                 {
-                    string cellValue = stringFormElement.GetString() ?? string.Empty;
-                    Cell newCell = new Cell(string.Empty);
-
-                    if (cellValue.StartsWith("="))
-                    {
-                        string formulaString = cellValue.Substring(1);
-                        var formula = new Formula(formulaString);
-                        newCell.StringCellContents = "=" + formulaString;
-                        newCell.Contents = formula;
-                        newCell.Value = GetCellValue(cellValue);
-                    }
-                    else if (double.TryParse(cellValue, out double number))
-                    {
-                        newCell.StringCellContents = number.ToString();
-                        newCell.Contents = number;
-                        newCell.Value = number;
-                    }
-                    else
-                    {
-                        newCell.StringCellContents = cellValue;
-                        newCell.Contents = cellValue;
-                        newCell.Value = GetCellValue(cell.ToString());
-                    }
-
-                    newCellContents[cellName] = newCell;
+                    SetContentsOfCell(cellName, numericValue.ToString());
+                }
+                else
+                {
+                    SetContentsOfCell(cellName, stringForm);
                 }
             }
-
-            cellContents.Clear();
-            foreach (var kvp in newCellContents)
+        }
+        catch (Exception exception)
+        {
+            // Restore original content if exception is thrown.
+            foreach (var keyValuePair in originalContent)
             {
-                cellContents[kvp.Key] = kvp.Value;
+                SetContentsOfCell(keyValuePair.Key, keyValuePair.Value.StringCellContents);
             }
 
-            Changed = false;
+            throw new SpreadsheetReadWriteException($"Loading to spreadsheet caused a {exception} exception.");
         }
-        catch (Exception)
-        {
-            throw new SpreadsheetReadWriteException("Error loading the spreadsheet.");
-        }
+
+        Changed = false;
     }
 
     /// <summary>
@@ -287,17 +244,19 @@ public class Spreadsheet
     /// </exception>
     public object GetCellValue(string cellName)
     {
-        if (!IsValidCellName(cellName))
+        var normalizedVariable = cellName.ToUpper();
+
+        if (!IsValidCellName(normalizedVariable))
         {
             throw new InvalidNameException();
         }
 
-        if (!cellContents.TryGetValue(cellName, out var cell))
+        if (!cellContents.TryGetValue(normalizedVariable, out var cell))
         {
             return string.Empty;
         }
 
-        return cellContents[cellName].Value;
+        return cellContents[normalizedVariable].Value;
     }
 
     /// <summary>
@@ -359,26 +318,27 @@ public class Spreadsheet
     /// </exception>
     public IList<string> SetContentsOfCell(string name, string content)
     {
-        // Validate the name.
+        var normalizedVariable = name.ToUpper();
+
         if (!IsValidCellName(name))
         {
             throw new InvalidNameException();
         }
 
-        // Try parsing the string as a double.
+        // Try parsing the content as either a double, formula, or string and call appropriate private method.
         IList<string> result;
         if (double.TryParse(content, out double numberContent))
         {
-            result = SetCellContents(name, numberContent);
+            result = SetCellContents(normalizedVariable, numberContent);
         }
         else if (content.StartsWith("="))
         {
             Formula formulaContent = new Formula(content.Substring(1));
-            result = SetCellContents(name, formulaContent);
+            result = SetCellContents(normalizedVariable, formulaContent);
         }
         else
         {
-            result = SetCellContents(name, content);
+            result = SetCellContents(normalizedVariable, content);
         }
 
         Changed = true;
@@ -404,6 +364,7 @@ public class Spreadsheet
             }
         }
 
+        Changed = true;
         return nonEmptyCells;
     }
 
@@ -420,14 +381,16 @@ public class Spreadsheet
     /// </returns>
     public object GetCellContents(string name)
     {
+        var normalizedVariable = name.ToUpper();
+
         if (!IsValidCellName(name))
         {
             throw new InvalidNameException();
         }
 
-        if (cellContents.ContainsKey(name))
+        if (cellContents.ContainsKey(normalizedVariable))
         {
-            return cellContents[name].Contents;
+            return cellContents[normalizedVariable].Contents;
         }
         else
         {
@@ -453,7 +416,7 @@ public class Spreadsheet
     /// </returns>
     private IList<string> SetCellContents(string name, double number)
     {
-        if (!cellContents.TryGetValue(name, out Cell existingCell))
+        if(!cellContents.TryGetValue(name, out var existingCell) || existingCell == null)
         {
             cellContents[name] = new Cell(number.ToString());
         }
@@ -462,14 +425,13 @@ public class Spreadsheet
             UpdateCellContents(existingCell, number.ToString(), number);
         }
 
+        // Recalculate affected cells that depended on the cell.
         List<string> cellsToRecalculate = GetCellsToRecalculate(name).ToList();
         for (int index = 1; index < cellsToRecalculate.Count; index++)
         {
             string cellName = cellsToRecalculate[index];
             cellContents[cellName].EvaluateValue(this);
         }
-
-        Changed = true;
 
         return GetCellsToRecalculate(name).ToList();
     }
@@ -489,10 +451,12 @@ public class Spreadsheet
     {
         dependencyGraph.ReplaceDependees(name, new HashSet<string>());
 
+        // If the text is empty, remove the cell and recalculate dependencies.
         if (string.IsNullOrEmpty(text))
         {
             cellContents.Remove(name);
 
+            // Recalculate values for affected cells.
             List<string> reevaluateCells = GetCellsToRecalculate(name).ToList();
             for (int index = 1; index < reevaluateCells.Count; index++)
             {
@@ -501,11 +465,11 @@ public class Spreadsheet
             }
 
             Changed = true;
-
             return GetCellsToRecalculate(name).ToList();
         }
 
-        if (!cellContents.TryGetValue(name, out Cell existingCell))
+        // Add new cell if it doesn't exist or update existing cell.
+        if (!cellContents.TryGetValue(name, out var existingCell) || existingCell == null)
         {
             cellContents[name] = new Cell(text);
         }
@@ -514,6 +478,7 @@ public class Spreadsheet
             UpdateCellContents(existingCell, text, text);
         }
 
+        // Recalculate values for all dependent cells.
         List<string> cellsToRecalculate = GetCellsToRecalculate(name).ToList();
         for (int index = 1; index < cellsToRecalculate.Count; index++)
         {
@@ -521,7 +486,6 @@ public class Spreadsheet
             cellContents[cellName].EvaluateValue(this);
         }
 
-        Changed = true;
         return GetCellsToRecalculate(name).ToList();
     }
 
@@ -547,10 +511,11 @@ public class Spreadsheet
     /// </returns>
     private IList<string> SetCellContents(string name, Formula formula)
     {
-        if (!cellContents.TryGetValue(name, out Cell existingCell))
+        if (!cellContents.TryGetValue(name, out var existingCell) || existingCell == null)
         {
             ManageCircularDependency(name, formula, string.Empty);
 
+            // Create and add a new cell with the formula.
             existingCell = new Cell("=" + formula.ToString());
             cellContents[name] = existingCell;
             existingCell.EvaluateValue(this);
@@ -559,6 +524,7 @@ public class Spreadsheet
         {
             object originalContents = existingCell.Contents;
 
+            // Clear old dependencies if the original content is a formula.
             if (originalContents is Formula)
             {
                 dependencyGraph.ReplaceDependees(name, new HashSet<string>());
@@ -569,13 +535,13 @@ public class Spreadsheet
             existingCell.EvaluateValue(this);
         }
 
+        // Recalculate values for affected dependent cells.
         List<string> cellsToRecalculate = GetCellsToRecalculate(name).ToList();
         foreach (string cellName in cellsToRecalculate.Skip(1))
         {
             cellContents[cellName].EvaluateValue(this);
         }
 
-        Changed = true;
         return GetCellsToRecalculate(name).ToList();
     }
 
@@ -648,6 +614,8 @@ public class Spreadsheet
         {
             SetCellContents(cellName, originalDouble);
         }
+
+        Changed = false;
     }
 
     /// <summary>
@@ -679,7 +647,7 @@ public class Spreadsheet
             return false;
         }
 
-        // Define the regex pattern for a valid cell name (from the Formula class)
+        // Defined regex pattern for a valid cell name from the Formula class
         string cellNamePattern = @"^[a-zA-Z]+[0-9]+$";
 
         return Regex.IsMatch(name, cellNamePattern);
@@ -784,12 +752,12 @@ internal class Cell
     }
 
     /// <summary>
-    /// Gets the contents of the cell.
+    /// Gets or sets the contents of the cell.
     /// </summary>
     public object Contents { get; set; }
 
     /// <summary>
-    /// Gets the Value of the cell.
+    /// Gets or sets the Value of the cell.
     /// </summary>
     public object Value { get; set; }
 

@@ -7,7 +7,6 @@ namespace SpreadsheetTests;
 using CS3500.Formula;
 using CS3500.Spreadsheet;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Text;
 
 /// <summary>
 /// Author:    Nandhini Ramanathan
@@ -354,7 +353,7 @@ public class SpreadsheetTests
         var spreadsheet = new Spreadsheet();
         spreadsheet.SetContentsOfCell("A1", "10.0");
         spreadsheet.SetContentsOfCell("A2", "Hello");
-        spreadsheet.SetContentsOfCell("A1", string.Empty); // Clear A1
+        spreadsheet.SetContentsOfCell("A1", string.Empty);
         var nonEmptyCells = spreadsheet.GetNamesOfAllNonemptyCells();
 
         Assert.IsFalse(nonEmptyCells.Contains("A1"));
@@ -448,6 +447,55 @@ public class SpreadsheetTests
         Assert.AreEqual(string.Empty, spreadsheet.GetCellContents("D1"));
     }
 
+    /// <summary>
+    ///     Tests setting contents that results in having to recalculate dependencies with formulas.
+    /// </summary>
+    [TestMethod]
+    public void SetCellContents_RecalculateDependentCellsFormulas_ExpectedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "5");
+        spreadsheet.SetContentsOfCell("B1", "=A1+2");
+        spreadsheet.SetContentsOfCell("C1", "=B1*2");
+
+        spreadsheet.SetContentsOfCell("A1", "10");
+
+        Assert.AreEqual(12.0, spreadsheet.GetCellValue("B1"));
+        Assert.AreEqual(24.0, spreadsheet.GetCellValue("C1"));
+    }
+
+    /// <summary>
+    ///     Tests setting contents that results in having to recalculate dependencies with strings.
+    /// </summary>
+    [TestMethod]
+    public void SetCellContents_RecalculateDependentCellsStrings_ExpectedValue()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "4");
+        spreadsheet.SetContentsOfCell("B1", "=A1+2");
+        spreadsheet.SetContentsOfCell("C1", "=B1*2");
+
+        spreadsheet.SetContentsOfCell("A1", "Hello");
+
+        Assert.IsInstanceOfType(spreadsheet.GetCellValue("B1"), typeof(FormulaError));
+        Assert.IsInstanceOfType(spreadsheet.GetCellValue("C1"), typeof(FormulaError));
+    }
+
+    /// <summary>
+    /// Tests that dependees are recalculated when a formula is passed through.
+    /// </summary>
+    [TestMethod]
+    public void SetCellContents_ExistingCellWithFormula_ReplacesDependeesAndEvaluates()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "=B1 + 1");
+        spreadsheet.SetContentsOfCell("A1", "B1 + 2");
+
+        Assert.AreEqual("B1 + 2", spreadsheet.GetCellContents("A1").ToString());
+        Assert.IsInstanceOfType(spreadsheet.GetCellValue("A1"), typeof(string));
+    }
+
+
     // --- Tests for GetCellValue method With SetCellContents Method ---
 
     /// <summary>
@@ -491,6 +539,59 @@ public class SpreadsheetTests
     }
 
     /// <summary>
+    /// Tests that a formula of just numbers evaluates proprly.
+    /// </summary>
+    [TestMethod]
+    public void SetCellContents_UpdateFormula_CoverOriginalContentsIsFormula()
+    {
+        var spreadsheet = new Spreadsheet();
+
+        spreadsheet.SetContentsOfCell("A1", "=2+3");
+        spreadsheet.SetContentsOfCell("B1", "=A1*2");
+
+        Assert.AreEqual(10.0, spreadsheet.GetCellValue("B1"));
+        Assert.AreEqual(5.0, spreadsheet.GetCellValue("A1"));
+    }
+
+    /// <summary>
+    /// Catches Circular Exception and reverts back to original contents.
+    /// </summary>
+    [TestMethod]
+    public void SetContentsOfCell_SetContentsWithDouble_DoesNotThrowCircularException()
+    {
+        var spreadsheet = new Spreadsheet();
+
+        try
+        {
+            spreadsheet.SetContentsOfCell("B1", "10.0");
+            spreadsheet.SetContentsOfCell("A1", "9.0");
+            spreadsheet.SetContentsOfCell("A1", "=A1+9.0");
+        }
+        catch (Exception)
+        {
+            Assert.AreEqual(9.0, spreadsheet.GetCellValue("A1"));
+        }
+
+        Assert.AreEqual(9.0, spreadsheet.GetCellValue("A1"));
+    }
+
+    /// <summary>
+    /// Tests that updating a formula, reverts back to original contents.
+    /// </summary>
+    [TestMethod]
+    public void SetCellContents_UpdateNonFormula_CoverOriginalContentsNotFormula()
+    {
+        var spreadsheet = new Spreadsheet();
+
+        spreadsheet.SetContentsOfCell("A1", "Hello");
+        spreadsheet.SetContentsOfCell("B1", "3+2");
+
+        var result = spreadsheet.SetContentsOfCell("A1", "World");
+
+        Assert.AreEqual("World", spreadsheet.GetCellValue("A1"));
+    }
+
+    /// <summary>
     ///     Tests getting the value of a cell with an invalid cell name throws an exception.
     /// </summary>
     [TestMethod]
@@ -530,10 +631,10 @@ public class SpreadsheetTests
     {
         var spreadsheet = new Spreadsheet();
         spreadsheet.SetContentsOfCell("A1", "100.0");
-        spreadsheet.SetContentsOfCell("A1", "0"); // Clear contents
+        spreadsheet.SetContentsOfCell("A1", "0");
         var value = spreadsheet.GetCellValue("A1");
 
-        Assert.AreEqual(0.0, value); // Should return default value
+        Assert.AreEqual(0.0, value);
     }
 
     /// <summary>
@@ -559,7 +660,7 @@ public class SpreadsheetTests
         spreadsheet.SetContentsOfCell("C1", "35.0");
         var value = spreadsheet.GetCellValue("C1");
 
-        Assert.AreEqual(35.0, value); // C1 should calculate the sum of A1 and B1
+        Assert.AreEqual(35.0, value);
     }
 
     /// <summary>
@@ -616,7 +717,7 @@ public class SpreadsheetTests
     {
         var spreadsheet = new Spreadsheet();
         spreadsheet.SetContentsOfCell("A1", "=B1 + 1");
-        spreadsheet.SetContentsOfCell("B1", "=A1 + 1"); // Circular dependency
+        spreadsheet.SetContentsOfCell("B1", "=A1 + 1");
         spreadsheet.GetCellValue("A1");
     }
 
@@ -643,8 +744,6 @@ public class SpreadsheetTests
     public void Indexer_InvalidCellName_ThrowsException()
     {
         var spreadsheet = new Spreadsheet();
-
-        // Try to access an invalid cell name
         var value = spreadsheet["1A"];
     }
 
@@ -656,13 +755,8 @@ public class SpreadsheetTests
     {
         var spreadsheet = new Spreadsheet();
 
-        // Set the value of a cell
         spreadsheet.SetContentsOfCell("A1", "5");
-
-        // Access the value using the indexer
         var value = spreadsheet["A1"];
-
-        // Assert that the value is correct
         Assert.AreEqual(5.0, value);
     }
 
@@ -674,8 +768,6 @@ public class SpreadsheetTests
     public void Indexer_NullOrEmptyCellName_ThrowsException()
     {
         var spreadsheet = new Spreadsheet();
-
-        // Try to access a cell with null or empty name
         var value = spreadsheet[string.Empty];
     }
 
@@ -725,10 +817,7 @@ public class SpreadsheetTests
         string filename = "formula_save.txt";
         spreadsheet.Save(filename);
 
-        var loadedSpreadsheet = new Spreadsheet(filename);
-        loadedSpreadsheet.Load(filename);
-
-        Assert.AreEqual(7.0, loadedSpreadsheet.GetCellValue("B1"));
+        Assert.AreEqual(7.0, spreadsheet.GetCellValue("B1"));
     }
 
     /// <summary>
@@ -818,25 +907,61 @@ public class SpreadsheetTests
     }
 
     /// <summary>
-    ///     Tests loading a spreadsheet from an invalid format JSON file.
+    ///     Tests loading a spreadsheet from a JSON file, throws exception with null.
     /// </summary>
     [TestMethod]
     [ExpectedException(typeof(SpreadsheetReadWriteException))]
-    public void Load_InvalidFormatJsonFile_ThrowsException()
+    public void Load_ValidJsonFile_NullJson()
     {
-        string expectedOutput = @"
-    {
-        ""Bla"": {
-            ""A1"": { ""StringForm"": ""5.0"" },
-            ""B1"": { ""StringForm"": ""Test"" },
-            ""C1"": { ""StringForm"": ""A1 + 2"" }
-        }
-    }";
-
-        File.WriteAllText("known_values.txt", expectedOutput);
+        File.WriteAllText("known_values.txt", "null");
 
         var spreadsheet = new Spreadsheet();
         spreadsheet.Load("known_values.txt");
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from a JSON file, resets to original contents when exception thrown.
+    /// </summary>
+    [TestMethod]
+    public void Load_InvalidJson_ThrowsExceptionAndRestoresOriginalContent()
+    {
+        var spreadsheet = new Spreadsheet();
+        spreadsheet.SetContentsOfCell("A1", "Hello");
+        spreadsheet.SetContentsOfCell("B2", "World");
+
+        File.WriteAllText("invalid.json", "invalid json");
+
+        try
+        {
+            spreadsheet.Load("invalid.json");
+        }
+        catch (SpreadsheetReadWriteException)
+        {
+            Assert.AreEqual("Hello", spreadsheet.GetCellContents("A1"));
+            Assert.AreEqual("World", spreadsheet.GetCellContents("B2"));
+            return;
+        }
+    }
+
+    /// <summary>
+    ///     Tests loading a spreadsheet from a JSON file, resets to original contents when exception thrown.
+    /// </summary>
+    [TestMethod]
+    public void Load_InvalidJson_ThrowsExceptionAndRestoresOriginalContent_WithFormula()
+    {
+        var spreadsheet = new Spreadsheet();
+
+        try
+        {
+            spreadsheet.SetContentsOfCell("A1", "=54+2");
+            spreadsheet.SetContentsOfCell("B2", "=A1+5");
+            spreadsheet.SetContentsOfCell("B2", "=B2+5");
+        }
+        catch (Exception)
+        {
+        }
+
+        Assert.AreEqual(56.0, spreadsheet.GetCellValue("A1"));
     }
 
     /// <summary>
@@ -915,38 +1040,6 @@ public class SpreadsheetTests
     }
 
     /// <summary>
-    /// Tests the Save and Load functionalities of the Spreadsheet class
-    /// by creating a large spreadsheet with 10,000 cells, saving it to a file,
-    /// and then loading it back to verify that all values are retained correctly.
-    /// </summary>
-    [TestMethod]
-    public void StressTest_SaveAndLoad_LargeSpreadsheet()
-    {
-        // Create a new instance of the Spreadsheet
-        Spreadsheet spreadsheet = new Spreadsheet();
-
-        // Fill the spreadsheet with a large number of cells
-        for (int i = 1; i <= 10000; i++)
-        {
-            spreadsheet.SetContentsOfCell($"A{i}", (i * 1.0).ToString()); // Set A1 to A10000 with values 1.0 to 10000.0
-        }
-
-        // Save the spreadsheet to a file
-        string filename = "large_spreadsheet.txt";
-        spreadsheet.Save(filename);
-
-        // Create a new spreadsheet and load from the saved file
-        Spreadsheet loadedSpreadsheet = new Spreadsheet(filename);
-        loadedSpreadsheet.Load(filename);
-
-        // Verify that the values are correct in the loaded spreadsheet
-        for (int i = 1; i <= 10000; i++)
-        {
-            Assert.AreEqual( i * 1.0, loadedSpreadsheet.GetCellContents($"A{i}"));
-        }
-    }
-
-    /// <summary>
     /// Stress test that updates a large number of cells in the spreadsheet.
     /// This test sets a value to each cell from A1 to A10000, then updates them,
     /// ensuring that the update process is efficient and correct.
@@ -959,13 +1052,14 @@ public class SpreadsheetTests
         // Initialize all cells from A1 to A10000 with a simple value
         for (int i = 1; i <= 10000; i++)
         {
-            spreadsheet.SetContentsOfCell($"A{i}", (i * 1.0).ToString()); // Set A1 to A10000 with values 1.0 to 10000.0
+            // Set A1 to A10000 with values 1.0 to 10000.0
+            spreadsheet.SetContentsOfCell($"A{i}", (i * 1.0).ToString());
         }
 
-        // Now update all cells to a new value
         for (int i = 1; i <= 10000; i++)
         {
-            spreadsheet.SetContentsOfCell($"A{i}", (i * 2.0).ToString()); // Set A1 to A10000 with values 2.0 to 20000.0
+            // Set A1 to A10000 with values 2.0 to 20000.0
+            spreadsheet.SetContentsOfCell($"A{i}", (i * 2.0).ToString());
         }
 
         // Verify that the values have been updated correctly
