@@ -214,7 +214,6 @@ public class Spreadsheet
 
         try
         {
-            // Read the JSON content from the file and deserialize it.
             string jsonString = File.ReadAllText(filename);
             var loadedData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonString);
 
@@ -223,21 +222,40 @@ public class Spreadsheet
                 throw new SpreadsheetReadWriteException("Invalid file format.");
             }
 
-            // Iterate through the cells in the loaded data.
             foreach (var cell in loadedData["Cells"].EnumerateObject())
             {
                 string cellName = cell.Name;
 
                 if (cell.Value.TryGetProperty("StringForm", out JsonElement stringFormElement))
                 {
-                    string cellContent = stringFormElement.GetString() ?? string.Empty;
+                    string cellValue = stringFormElement.GetString() ?? string.Empty;
+                    Cell newCell = new Cell(string.Empty);
 
-                    // Create a new Cell object using the content directly.
-                    newCellContents[cellName] = new Cell(cellContent);
+                    if (cellValue.StartsWith("="))
+                    {
+                        string formulaString = cellValue.Substring(1);
+                        var formula = new Formula(formulaString);
+                        newCell.StringCellContents = "=" + formulaString;
+                        newCell.Contents = formula;
+                        newCell.Value = 0;
+                    }
+                    else if (double.TryParse(cellValue, out double number))
+                    {
+                        newCell.StringCellContents = number.ToString();
+                        newCell.Contents = number;
+                        newCell.Value = number;
+                    }
+                    else
+                    {
+                        newCell.StringCellContents = cellValue;
+                        newCell.Contents = cellValue;
+                        newCell.Value = 0;
+                    }
+
+                    newCellContents[cellName] = newCell;
                 }
             }
 
-            // Clear the current contents and load the new ones.
             cellContents.Clear();
             foreach (var kvp in newCellContents)
             {
@@ -435,7 +453,25 @@ public class Spreadsheet
     /// </returns>
     private IList<string> SetCellContents(string name, double number)
     {
-        return SetCellContentsHelper(name, number);
+        if (!cellContents.TryGetValue(name, out Cell existingCell))
+        {
+            cellContents[name] = new Cell(number.ToString());
+        }
+        else
+        {
+            UpdateCellContents(existingCell, number.ToString(), number);
+        }
+
+        List<string> cellsToRecalculate = GetCellsToRecalculate(name).ToList();
+        for (int index = 1; index < cellsToRecalculate.Count; index++)
+        {
+            string cellName = cellsToRecalculate[index];
+            cellContents[cellName].EvaluateValue(this);
+        }
+
+        Changed = true;
+
+        return GetCellsToRecalculate(name).ToList();
     }
 
     /// <summary>
@@ -451,7 +487,42 @@ public class Spreadsheet
     /// </returns>
     private IList<string> SetCellContents(string name, string text)
     {
-        return SetCellContentsHelper(name, text);
+        dependencyGraph.ReplaceDependees(name, new HashSet<string>());
+
+        if (string.IsNullOrEmpty(text))
+        {
+            cellContents.Remove(name);
+
+            List<string> reevaluateCells = GetCellsToRecalculate(name).ToList();
+            for (int index = 1; index < reevaluateCells.Count; index++)
+            {
+                string cellName = reevaluateCells[index];
+                cellContents[cellName].EvaluateValue(this);
+            }
+
+            Changed = true;
+
+            return GetCellsToRecalculate(name).ToList();
+        }
+
+        if (!cellContents.TryGetValue(name, out Cell existingCell))
+        {
+            cellContents[name] = new Cell(text);
+        }
+        else
+        {
+            UpdateCellContents(existingCell, text, text);
+        }
+
+        List<string> cellsToRecalculate = GetCellsToRecalculate(name).ToList();
+        for (int index = 1; index < cellsToRecalculate.Count; index++)
+        {
+            string cellName = cellsToRecalculate[index];
+            cellContents[cellName].EvaluateValue(this);
+        }
+
+        Changed = true;
+        return GetCellsToRecalculate(name).ToList();
     }
 
     /// <summary>
@@ -476,7 +547,107 @@ public class Spreadsheet
     /// </returns>
     private IList<string> SetCellContents(string name, Formula formula)
     {
-        return SetCellContentsHelper(name, formula);
+        if (!cellContents.TryGetValue(name, out Cell existingCell))
+        {
+            ManageCircularDependency(name, formula, string.Empty);
+
+            existingCell = new Cell("=" + formula.ToString());
+            cellContents[name] = existingCell;
+            existingCell.EvaluateValue(this);
+        }
+        else
+        {
+            object originalContents = existingCell.Contents;
+
+            if (originalContents is Formula)
+            {
+                dependencyGraph.ReplaceDependees(name, new HashSet<string>());
+            }
+
+            ManageCircularDependency(name, formula, originalContents);
+            existingCell.StringCellContents = "=" + formula.ToString();
+            existingCell.EvaluateValue(this);
+        }
+
+        List<string> cellsToRecalculate = GetCellsToRecalculate(name).ToList();
+        foreach (string cellName in cellsToRecalculate.Skip(1))
+        {
+            cellContents[cellName].EvaluateValue(this);
+        }
+
+        Changed = true;
+        return GetCellsToRecalculate(name).ToList();
+    }
+
+    /// <summary>
+    /// Updates the contents and properties of the cell.
+    /// </summary>
+    /// <param name="cell">The cell to update.</param>
+    /// <param name="stringContents">The new string representation of the contents.</param>
+    /// <param name="value">The new value of the cell.</param>
+    private void UpdateCellContents(Cell cell, string stringContents, object value)
+    {
+        cell.StringCellContents = stringContents;
+        cell.Value = value;
+        cell.Contents = value;
+    }
+
+    /// <summary>
+    /// Validates if setting the formula for the specified cell creates a circular dependency,
+    /// and manages the existing contents of the cell accordingly.
+    /// </summary>
+    /// <param name="cellName">The name of the cell to validate.</param>
+    /// <param name="formula">The formula being set for the cell.</param>
+    /// <param name="originalContents">The original contents of the cell before setting the new formula.</param>
+    /// <exception cref="CircularException">Thrown if a circular dependency is detected.</exception>
+    private void ManageCircularDependency(string cellName, Formula formula, object originalContents)
+    {
+        HashSet<string> formulaVariables = formula.GetVariables().ToHashSet();
+
+        // Check for direct circular dependency
+        if (formulaVariables.Contains(cellName))
+        {
+            RestoreOriginalContents(cellName, originalContents);
+            throw new CircularException();
+        }
+
+        dependencyGraph.ReplaceDependees(cellName, new HashSet<string>());
+        foreach (string dependee in formulaVariables)
+        {
+            dependencyGraph.AddDependency(dependee, cellName);
+        }
+
+        // Check for circular dependencies caused by adding new dependencies
+        try
+        {
+            GetCellsToRecalculate(cellName);
+        }
+        catch (CircularException)
+        {
+            RestoreOriginalContents(cellName, originalContents);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Restores the original contents of the specified cell.
+    /// </summary>
+    /// <param name="cellName">The name of the cell to restore.</param>
+    /// <param name="originalContents">The original contents to set back to the cell.</param>
+    private void RestoreOriginalContents(string cellName, object originalContents)
+    {
+        if (originalContents is Formula originalFormula)
+        {
+            SetCellContents(cellName, originalFormula);
+        }
+        else if (originalContents is string originalString)
+        {
+            SetCellContents(cellName, originalString);
+        }
+        else if (originalContents is double originalDouble)
+        {
+            SetCellContents(cellName, originalDouble);
+        }
     }
 
     /// <summary>
@@ -512,76 +683,6 @@ public class Spreadsheet
         string cellNamePattern = @"^[a-zA-Z]+[0-9]+$";
 
         return Regex.IsMatch(name, cellNamePattern);
-    }
-
-    /// <summary>
-    /// Sets the contents of a specified cell and updates the dependencies.
-    /// If a circular dependency is detected, the operation is stopped and reverted.
-    /// </summary>
-    /// <exception cref="InvalidNameException">
-    /// Thrown if the cell name is invalid.
-    /// </exception>
-    /// <exception cref="CircularException">
-    /// Thrown if setting the content causes a circular dependency.
-    /// </exception>
-    /// <param name="name">The name of the cell to set the content for.</param>
-    /// <param name="content">The content to set (string, double, or formula).</param>
-    /// <returns>A list of cells that need to be recalculated after the update.</returns>
-    private IList<string> SetCellContentsHelper(string name, object content)
-    {
-        object originalContent;
-        if (cellContents.ContainsKey(name))
-        {
-            originalContent = cellContents[name].Contents;
-        }
-        else
-        {
-            originalContent = string.Empty;
-        }
-
-        // Backup the original dependents
-        HashSet<string> originalDependees = new HashSet<string>(dependencyGraph.GetDependees(name));
-
-        try
-        {
-            // Handle formulas by adding new dependencies.
-            if (content is Formula formula)
-            {
-                dependencyGraph.ReplaceDependees(name, formula.GetVariables());
-                cellContents[name] = new Cell("=" + formula.ToString());
-            }
-            else
-            {
-                // Clear dependees if it's not a formula.
-                dependencyGraph.ReplaceDependees(name, new HashSet<string>());
-                cellContents[name] = new Cell(content.ToString());
-            }
-
-            // Recompute the values of all dependent cells.
-            List<string> cellsToReevaluate = GetCellsToRecalculate(name).ToList();
-
-            for (int i = 1; i < cellsToReevaluate.Count; i++)
-            {
-                cellContents[cellsToReevaluate[i]].EvaluateValue(this);
-            }
-
-            // Return the list of cells that need to be recalculated.
-            return cellsToReevaluate;
-        }
-        catch (CircularException)
-        {
-            // Revert content to the original if a circular dependency is found.
-            if (cellContents.ContainsKey(name))
-            {
-                cellContents[name] = new Cell(originalContent.ToString());
-            }
-
-            // Restore original dependees to prevent inconsistency.
-            dependencyGraph.ReplaceDependees(name, originalDependees);
-
-            // Rethrow the exception to handle it upstream.
-            throw;
-        }
     }
 
     /// <summary>
@@ -685,12 +786,12 @@ internal class Cell
     /// <summary>
     /// Gets the contents of the cell.
     /// </summary>
-    public object Contents { get; private set; }
+    public object Contents { get; set; }
 
     /// <summary>
     /// Gets the Value of the cell.
     /// </summary>
-    public object Value { get; private set; }
+    public object Value { get; set; }
 
     /// <summary>
     /// Gets or sets the string contents of the cell.
